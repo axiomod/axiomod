@@ -1,0 +1,39 @@
+# v1.0.0 - Enterprise Ready 🚀
+
+We are proud to announce the first stable release of **Axiomod**, the enterprise-grade Go macroservice framework. This release marks a major milestone, delivering a hardened, fully documented, and production-ready foundation for building scalable microservices.
+
+## 🌟 Key Highlights
+
+* **Clean Architecture Enforcement**: Strict separation of concerns (Domain, Usecase, Delivery, Infrastructure) powered by `uber-go/fx` dependency injection.
+* **Production-Grade Plugins**:
+  * **Database**: Native support for MySQL and PostgreSQL with connection pooling and transaction management.
+  * **Authentication**: Built-in JWT validation and OIDC integration (Keycloak ready).
+  * **Observability**: Out-of-the-box structured logging (Zap), Prometheus metrics, and OpenTelemetry tracing.
+* **Resilience & Async**: Integrated Background Worker pool and Kafka Producer/Consumer implementation.
+* **Developer Experience**:
+  * `axiomod` CLI for rapid project scaffolding (`init`, `generate`).
+  * Comprehensive documentation suite.
+
+## 📦 Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/axiomod/axiomod.git
+cd axiomod
+
+# Build the CLI
+make build-cli
+
+# Initialize your first project
+./bin/axiomod init my-service
+```
+
+## 📚 Documentation
+
+* [Getting Started](https://github.com/axiomod/axiomod/blob/v1.0.0/README.md)
+* [Developer Guide](https://github.com/axiomod/axiomod/blob/v1.0.0/docs/developer-guide.md)
+* [API Reference](https://github.com/axiomod/axiomod/blob/v1.0.0/docs/api-reference.md)
+
+## 🤝 Contributors
+
+Thank you to everyone who contributed to making this release possible!
