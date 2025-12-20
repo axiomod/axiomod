@@ -28,7 +28,7 @@ Example:
 		fmt.Printf("Generating module: %s\n", name)
 
 		// Define paths
-		moduleBasePath := filepath.Join("internal", "examples") // Changed from internal/modules to internal/examples
+		moduleBasePath := "examples" // Fixed path to examples at root
 		modulePath := filepath.Join(moduleBasePath, name)
 		entityPath := filepath.Join(modulePath, "entity")
 		repositoryPath := filepath.Join(modulePath, "repository")
@@ -116,7 +116,7 @@ const repositoryTemplate = `package repository
 
 import (
 	"context"
-	"axiomod/internal/examples/{{.ModuleName}}/entity"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/entity"
 )
 
 // {{.RepositoryName}} defines the interface for data access operations for {{.EntityName}}.
@@ -136,8 +136,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"axiomod/internal/examples/{{.ModuleName}}/entity"
-	"axiomod/internal/examples/{{.ModuleName}}/repository"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/entity"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/repository"
 )
 
 // Create{{.EntityName}}UseCase handles the creation of a new {{.EntityName}}.
@@ -183,8 +183,8 @@ import (
 
 	"go.uber.org/zap"
 	// Import repository and entity if needed
-	// "axiomod/internal/examples/{{.ModuleName}}/entity"
-	// "axiomod/internal/examples/{{.ModuleName}}/repository"
+	// "github.com/axiomod/axiomod/examples/{{.ModuleName}}/entity"
+	// "github.com/axiomod/axiomod/examples/{{.ModuleName}}/repository"
 )
 
 // {{.ServiceName}} defines the interface for the {{.ModuleName}} service.
@@ -224,7 +224,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	// "axiomod/internal/examples/{{.ModuleName}}/service"
+	// "github.com/axiomod/axiomod/examples/{{.ModuleName}}/service"
 )
 
 // {{.HandlerName}} handles HTTP requests for the {{.ModuleName}} module.
@@ -267,8 +267,8 @@ import (
 
 	"go.uber.org/zap"
 	// Import generated protobuf code
-	// pb "axiomod/gen/proto/{{.ModuleName}}/v1"
-	// "axiomod/internal/examples/{{.ModuleName}}/service"
+	// pb "github.com/axiomod/axiomod/gen/proto/{{.ModuleName}}/v1"
+	// "github.com/axiomod/axiomod/examples/{{.ModuleName}}/service"
 )
 
 // {{.GRPCServiceName}} implements the gRPC service for the {{.ModuleName}} module.
@@ -302,8 +302,8 @@ import (
 	"fmt"
 	"sync"
 
-	"axiomod/internal/examples/{{.ModuleName}}/entity"
-	"axiomod/internal/examples/{{.ModuleName}}/repository"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/entity"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/repository"
 )
 
 // InMemory{{.RepositoryName}} is an in-memory implementation of {{.RepositoryName}}.
@@ -352,12 +352,12 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"axiomod/internal/examples/{{.ModuleName}}/delivery/http"
-	"axiomod/internal/examples/{{.ModuleName}}/delivery/grpc"
-	"axiomod/internal/examples/{{.ModuleName}}/infrastructure/persistence"
-	"axiomod/internal/examples/{{.ModuleName}}/repository"
-	"axiomod/internal/examples/{{.ModuleName}}/service"
-	"axiomod/internal/examples/{{.ModuleName}}/usecase"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/delivery/http"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/delivery/grpc"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/infrastructure/persistence"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/repository"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/service"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/usecase"
 )
 
 // Module provides the FX module for the {{.ModuleName}} example.

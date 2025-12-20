@@ -53,7 +53,7 @@ WORKDIR /root/
 COPY --from=builder /axiomod-server .
 
 # Copy configuration files (adjust path if needed)
-COPY internal/framework/config/service_default.yaml /config/config.yaml
+COPY framework/config/service_default.yaml /config/config.yaml
 
 # Expose port (adjust if your service uses a different port)
 EXPOSE 8080

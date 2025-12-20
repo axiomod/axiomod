@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"axiomod/internal/framework/config"
-	"axiomod/internal/framework/di"
-	"axiomod/internal/framework/router"
-	"axiomod/internal/platform/observability"
+	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/di"
+	"github.com/axiomod/axiomod/framework/router"
+	"github.com/axiomod/axiomod/platform/observability"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"

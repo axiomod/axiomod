@@ -46,20 +46,27 @@ Example:
 			os.Exit(1)
 		}
 
+		// Add replace directive for local development (optional, but helpful for testing)
+		// This points to the parent directory where axiomod is located
+		replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/axiomod/axiomod=../")
+		replaceCmd.Stdout = os.Stdout
+		replaceCmd.Stderr = os.Stderr
+		if err := replaceCmd.Run(); err != nil {
+			fmt.Printf("Warning: could not add direct replace directive: %v\n", err)
+		}
+
 		// Create directory structure
 		dirs := []string{
 			"cmd/" + projectName,
-			"internal/framework/config",
-			"internal/framework/logger",
-			"internal/framework/worker",
-			"internal/platform/server",
-			"internal/platform/observability",
-			"internal/plugins",
+			"cmd/" + projectName,
+			"internal/domain",
+			"internal/usecase",
+			"internal/infrastructure",
 			"tests/unit",
 			"tests/integration",
 			"docs",
 			"scripts",
-			"migrations", // Added migrations directory
+			"migrations",
 		}
 
 		for _, dir := range dirs {
@@ -76,7 +83,7 @@ Example:
 		fmt.Println("\nNext steps:")
 		fmt.Println("1. cd " + projectName)
 		fmt.Println("2. go mod tidy")
-		fmt.Println("3. Update internal/framework/config/service_default.yaml with your settings (e.g., database DSN)")
+		fmt.Println("3. Update framework/config/service_default.yaml with your settings (e.g., database DSN)")
 		fmt.Println("4. axiomod migrate create initial_schema")
 		fmt.Println("5. axiomod migrate up")
 		fmt.Println("6. go run ./cmd/" + projectName)
@@ -95,26 +102,27 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"%s/internal/framework/config"
-	"%s/internal/framework/worker"
-	"%s/internal/platform/observability"
-	"%s/internal/platform/server"
-	"%s/internal/plugins"
+	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/worker"
+	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/platform/server"
+	"github.com/axiomod/axiomod/plugins"
 )
 
 func main() {
 	// Parse command line flags
-	configPath := flag.String("config", "", "path to config file (default: internal/framework/config/service_default.yaml)")
+	configPath := flag.String("config", "", "path to config file (default: config/service_default.yaml)")
 	flag.Parse()
 
 	// Determine config path
 	resolvedConfigPath := *configPath
 	 if resolvedConfigPath == "" {
-		 resolvedConfigPath = "internal/framework/config/service_default.yaml"
+		 resolvedConfigPath = "config/service_default.yaml"
 	 }
 
 	// Load initial config just for logger setup (optional, can use default)
@@ -125,7 +133,7 @@ func main() {
 	}
 
 	// Setup initial logger (can be replaced by FX provided logger later)
-	 initialLogger, err := logger.NewLogger(tempCfg.Logging.Level, tempCfg.Logging.Format)
+	 initialLogger, err := observability.NewLogger(tempCfg)
 	 if err != nil {
 		 fmt.Printf("Error creating initial logger: %%v\n", err)
 		 os.Exit(1)
@@ -189,7 +197,7 @@ func main() {
 	}
 	 initialLogger.Info("Application stopped gracefully")
 }
-`, projectName, projectName, projectName, projectName, projectName)
+`)
 
 	err := os.WriteFile(filepath.Join("cmd", projectName, "main.go"), []byte(mainContent), 0644)
 	if err != nil {
@@ -198,36 +206,45 @@ func main() {
 	}
 
 	// Create config.yaml
-	configContent := `# Default configuration for the service
-server:
+	configContent := `app:
+  name: "%s"
+  environment: development
+  version: 1.0.0
+  debug: true
+
+http:
+  host: 0.0.0.0
   port: 8080
-  readTimeout: 5  # seconds
-  writeTimeout: 10 # seconds
-  idleTimeout: 120 # seconds
+  readTimeout: 30
+  writeTimeout: 30
+
+grpc:
+  host: 0.0.0.0
+  port: 50051
+
+observability:
+  logLevel: info
+  logFormat: text
+  tracingEnabled: false
+  tracingURL: "http://localhost:14268/api/traces"
+  metricsEnabled: true
+  metricsPort: 9090
 
 database:
   driver: "postgres"
-  dsn: "host=localhost port=5432 user=postgres password=postgres dbname=axiomod sslmode=disable" # CHANGE ME
-  maxOpenConns: 10
-  maxIdleConns: 5
-  connMaxLifetime: 3600 # seconds
-
-logging:
-  level: "info" # debug, info, warn, error, fatal, panic
-  format: "json" # json or console
-
-tracing:
-  enabled: true
-  exporter: "jaeger" # jaeger, zipkin, otlp
-  endpoint: "http://localhost:14268/api/traces" # Jaeger collector endpoint
-  serviceName: "%s" # Service name for traces
-  sampleRate: 1.0 # 1.0 means trace everything
-
-metrics:
-  enabled: true
-  path: "/metrics" # Prometheus scrape endpoint
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "password"
+  name: "axiomod"
+  sslMode: "disable"
 `
-	err = os.WriteFile(filepath.Join("internal", "framework", "config", "service_default.yaml"), []byte(fmt.Sprintf(configContent, projectName)), 0644)
+	err = os.MkdirAll(filepath.Join("config"), 0755)
+	if err != nil {
+		fmt.Printf("Error creating config directory: %v\n", err)
+		os.Exit(1)
+	}
+	err = os.WriteFile(filepath.Join("config", "service_default.yaml"), []byte(fmt.Sprintf(configContent, projectName)), 0644)
 	if err != nil {
 		fmt.Printf("Error creating service_default.yaml: %v\n", err)
 		os.Exit(1)
@@ -279,12 +296,11 @@ go build -o bin/%s ./cmd/%s
 The project follows a clean architecture approach with the following structure:
 
 - `+"`cmd/%s`"+`: Application entry point
-- `+"`internal/framework`"+`: Core framework components (config, server, logger, db, etc.)
-- `+"`internal/examples`"+`: Example bounded contexts/modules
-- `+"`internal/platform`"+`: Platform-specific components (observability)
-- `+"`internal/plugins`"+`: Pluggable extensions
+- `+"`internal/domain`"+`: Business entities and rules
+- `+"`internal/usecase`"+`: Application-specific business rules
+- `+"`internal/infrastructure`"+`: Implementation details (DB repositories, external APIs)
 - `+"`tests`"+`: Unit and integration tests
-- `+"`docs`"+`: Documentation (including ADRs)
+- `+"`docs`"+`: Documentation
 - `+"`scripts`"+`: Build and deployment scripts
 - `+"`migrations`"+`: Database migration files
 

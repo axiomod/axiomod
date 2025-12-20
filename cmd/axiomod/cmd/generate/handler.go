@@ -65,7 +65,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	"axiomod/internal/examples/{{.ModuleName}}/service"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/service"
 )
 
 // {{.HandlerName}} handles HTTP requests for the {{.ModuleName}} module.
@@ -121,8 +121,8 @@ import (
 
 	"go.uber.org/zap"
 	// Import repository and entity if needed
-	// "axiomod/internal/examples/{{.ModuleName}}/entity"
-	// "axiomod/internal/examples/{{.ModuleName}}/repository"
+	// "github.com/axiomod/axiomod/examples/{{.ModuleName}}/entity"
+	// "github.com/axiomod/axiomod/examples/{{.ModuleName}}/repository"
 )
 
 // {{.ServiceName}} defines the interface for the {{.ModuleName}} service.

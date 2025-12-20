@@ -27,7 +27,7 @@ Example:
 		pluginName := filepath.Base(pluginSource)
 
 		// Define plugin directory
-		pluginDir := filepath.Join("internal", "plugins", pluginName)
+		pluginDir := filepath.Join("plugins", pluginName)
 
 		// Check if plugin already exists
 		if _, err := os.Stat(pluginDir); !os.IsNotExist(err) {
@@ -56,13 +56,9 @@ Example:
 			os.Exit(1)
 		}
 
-		// Update the main plugin registration file (e.g., internal/plugins/builtin_plugins.go)
-		// This part requires more complex code modification (AST parsing or simple text append)
-		// For simplicity, we will just print a message here.
-		fmt.Println("\nPlugin source downloaded.")
-		fmt.Println("Please manually register the plugin in internal/plugins/builtin_plugins.go")
+		fmt.Println("Please manually register the plugin in plugins/builtin_plugins.go")
 		fmt.Println("Example registration:")
-		fmt.Printf("import _ \"axiomod/internal/plugins/%s\"\n", pluginName)
+		fmt.Printf("import _ \"github.com/axiomod/axiomod/plugins/%s\"\n", pluginName)
 		fmt.Println("// Add plugin options to the Fx application in cmd/axiomod-server/fx_options.go")
 
 		fmt.Printf("\nPlugin %s installed successfully (manual registration required).\n", pluginName)

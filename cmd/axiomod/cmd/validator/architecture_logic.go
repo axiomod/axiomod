@@ -117,12 +117,12 @@ func getDefaultConfig() Configuration {
 			},
 			{
 				Pattern:         "internal/*/repository",
-				AllowedToImport: "internal/platform/ent",
+				AllowedToImport: "platform/ent",
 				Explanation:     "Repositories can import the Ent ORM",
 			},
 			{
 				Pattern:         "internal/*/delivery/*",
-				AllowedToImport: "internal/platform/server",
+				AllowedToImport: "platform/server",
 				Explanation:     "Delivery layers can import server components",
 			},
 		},
@@ -130,8 +130,8 @@ func getDefaultConfig() Configuration {
 			AllowCrossDomainDependencies: false,
 			AllowedCrossDomainImports: []DomainDependency{
 				{
-					Source:      "internal/example",
-					Target:      "internal/platform",
+					Source:      "examples/example",
+					Target:      "platform",
 					Explanation: "Example domain can import platform components",
 				},
 			},
@@ -325,7 +325,7 @@ func isWildcardMatch(pattern, str string) bool {
 
 // isDomainPath checks if a path is within a domain package
 func isDomainPath(path string) bool {
-	return strings.HasPrefix(path, "domain/") || strings.Contains(path, "/internal/example/")
+	return strings.HasPrefix(path, "domain/") || strings.Contains(path, "/examples/example/")
 }
 
 // extractDomainName extracts the domain name from a path like "domain/example/model"
@@ -335,7 +335,7 @@ func extractDomainName(path string) string {
 		if len(parts) >= 2 {
 			return parts[1]
 		}
-	} else if strings.Contains(path, "/internal/example/") {
+	} else if strings.Contains(path, "/examples/example/") {
 		return "example"
 	}
 	return ""
@@ -485,8 +485,8 @@ func validateArchitecture(rootDir string, config Configuration) ([]string, Valid
 		ViolationsByTarget:   make(map[string]int),
 	}
 
-	// Walk through all Go files in the internal directory
-	err := filepath.Walk(filepath.Join(rootDir, "internal"), func(path string, info os.FileInfo, err error) error {
+	// Walk through all Go files in the project
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error accessing %s: %w", path, err)
 		}
@@ -507,7 +507,7 @@ func validateArchitecture(rootDir string, config Configuration) ([]string, Valid
 		summary.FilesChecked++
 
 		// Determine the package from the file path
-		relPath, err := filepath.Rel(filepath.Join(rootDir, "internal"), filepath.Dir(path))
+		relPath, err := filepath.Rel(rootDir, filepath.Dir(path))
 		if err != nil {
 			return fmt.Errorf("failed to get relative path for %s: %w", path, err)
 		}
@@ -538,20 +538,16 @@ func validateArchitecture(rootDir string, config Configuration) ([]string, Valid
 			summary.ImportsChecked++
 
 			// Only check project imports
-			if !strings.Contains(importPath, "internal/") && !strings.Contains(importPath, "axiomod/") {
+			if !strings.Contains(importPath, "internal/") && !strings.Contains(importPath, "github.com/axiomod/axiomod/") {
 				continue
 			}
 
 			// Extract the layer/package from the import path
 			var importedLayer string
-			if strings.Contains(importPath, "internal/") {
-				parts := strings.Split(importPath, "internal/")
-				importedLayer = parts[1]
-			} else if strings.Contains(importPath, "axiomod/internal/") {
-				parts := strings.Split(importPath, "axiomod/internal/")
-				importedLayer = parts[1]
+			if strings.HasPrefix(importPath, "github.com/axiomod/axiomod/") {
+				importedLayer = strings.TrimPrefix(importPath, "github.com/axiomod/axiomod/")
 			} else {
-				continue // Skip external imports
+				continue // Skip internal/ and external imports
 			}
 
 			// Check if this dependency is allowed

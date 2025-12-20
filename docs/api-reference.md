@@ -23,7 +23,7 @@ func (h *Handler) GetUser(c *fiber.Ctx) error {
 
 ### Error Handling
 
-The framework includes a centralized error handler that maps internal framework errors (from `internal/framework/errors`) to appropriate HTTP status codes (e.g., `ErrNotFound` -> `404`).
+The framework includes a centralized error handler that maps internal framework errors (from `github.com/axiomod/axiomod/framework/errors`) to appropriate HTTP status codes (e.g., `ErrNotFound` -> `404`).
 
 ## 2. gRPC API
 

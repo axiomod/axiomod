@@ -1,7 +1,7 @@
 BINARY_NAME=axiomod-server
 CLI_NAME=axiomod
 
-.PHONY: all build build-cli cleaner test deps lint fmt help
+.PHONY: all build build-cli clean test deps lint fmt help docker
 
 all: build build-cli
 
@@ -19,7 +19,7 @@ clean:
 	@echo "Cleaned build artifacts"
 
 test:
-	go test -v ./internal/... ./tests/...
+	go test -v ./...
 
 deps:
 	go mod tidy
@@ -37,9 +37,12 @@ docker:
 
 help:
 	@echo "Available commands:"
+	@echo "  make all          - Build both server and CLI"
 	@echo "  make build        - Build the server binary"
 	@echo "  make build-cli    - Build the CLI tool"
 	@echo "  make test         - Run all tests"
-	@echo "  make clean        - Remove binaries"
+	@echo "  make clean        - Remove binaries and build artifacts"
 	@echo "  make deps         - Install dependencies"
 	@echo "  make lint         - Run linters"
+	@echo "  make fmt          - Format Go code"
+	@echo "  make docker       - Build Docker image for the server"

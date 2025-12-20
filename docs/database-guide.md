@@ -30,7 +30,7 @@ database:
 
 ## 2. Usage
 
-The framework provides a `database.DB` wrapper in `internal/framework/database`.
+The framework provides a `database.DB` wrapper in `framework/database`.
 
 ### Getting a Connection
 
@@ -85,7 +85,7 @@ If the function returns an error, the transaction is automatically rolled back. 
 
 ## 4. Plugins (MySQL/PostgreSQL)
 
-While the `database` package provides the wrapper, specific drivers are managed as plugins in `internal/plugins`. These plugins handle the actual connection established at startup using the `database.Connect` function.
+While the `database` package provides the wrapper, specific drivers are managed as plugins in `plugins`. These plugins handle the actual connection established at startup using the `database.Connect` function.
 
 ### Enabling Database Plugins
 

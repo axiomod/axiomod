@@ -40,14 +40,21 @@ The plugin system allows for extending the framework's functionality without mod
 ├── cmd/                                       # Application entrypoints
 │   └── axiomod-server/                        # Main server app
 │
+├── framework/                             # Core framework components
+│   ├── config/                            # Configuration management
+│   ├── auth/                              # Authentication & OIDC
+│   ├── database/                          # Database abstraction
+│   └── worker/                            # Background worker pools
+│
+├── plugins/                               # Dynamic plugins
+│
+├── platform/                               # Shared infrastructure
+│   ├── server/                            # HTTP & gRPC server setup
+│   └── observability/                     # Logging, Metrics, Tracing
+│
 ├── internal/                                  # Private application code
-│   ├── examples/                              # Example implementations
-│   │   └── example/                           # Sample bounded context
-│   ├── framework/                             # Framework components (formerly pkg/)
-│   │   └── config/                            # Configuration management
-│   ├── plugins/                               # Dynamic plugins
-│   ├── platform/                              # Shared infrastructure
-│   └── errors/                                # Centralized error types
+│
+├── examples/                                  # Example implementations
 │
 ├── scripts/                                   # Automation scripts
 │

@@ -39,7 +39,7 @@ axiomod validator architecture [dir]
 
 ### Architecture Rules
 
-The architecture validator uses a JSON configuration file to define allowed dependencies between modules. By default, it looks for `architecture-rules.json` in the current directory, the `./config` directory, or the `./internal/framework/config` directory. You can also specify a custom path using the `--config` flag.
+The architecture validator uses a JSON configuration file to define allowed dependencies between modules. By default, it looks for `architecture-rules.json` in the current directory, the `./config` directory, or the `./framework/config` directory. You can also specify a custom path using the `--config` flag.
 
 Example `architecture-rules.json`:
 
@@ -67,8 +67,8 @@ Example `architecture-rules.json`:
     "allowCrossDomainDependencies": false,
     "allowedCrossDomainImports": [
       {
-        "source": "internal/examples/example",
-        "target": "internal/platform",
+        "source": "examples/example",
+        "target": "platform",
         "explanation": "Example domain can import platform components"
       }
     ]
@@ -89,8 +89,8 @@ axiomod validator naming [dir]
 ### Options
 
 ```
---sql string   Directory containing SQL migrations (default "./internal/platform/ent/migrate/migrations")
---api string   Directory containing API handlers (default "./internal/examples/example/delivery/http")
+--sql string   Directory containing SQL migrations (default "./platform/db/migrations")
+--api string   Directory containing API handlers (default "./examples/delivery/http")
 --json         Output results in JSON format
 ```
 
@@ -117,7 +117,7 @@ The naming validator checks the following conventions:
   - Column names: snake_case
   - Foreign key columns: end with _id
   - Boolean columns: prefix with is_, has_, can_, etc.
-  - Timestamp columns: suffix with _at, _date, or _time
+  - Timestamp columns: suffix with _at,_date, or _time
 
 ## Domain Validator
 
@@ -276,8 +276,8 @@ If you need to allow specific cross-domain imports:
 
 ```json
 {
-  "source": "internal/examples/newservice",
-  "target": "internal/framework/logger",
+  "source": "examples",
+  "target": "framework/logger",
   "explanation": "New service needs framework logging"
 }
 ```
@@ -292,8 +292,6 @@ axiomod validator architecture --config=path/to/your/architecture-rules.json
 
 This will validate your codebase against the updated rules.
 
-
-
 ## Detailed CLI Usage Examples
 
 Here are more detailed examples of how to use the `axiomod validator` subcommands:
@@ -305,7 +303,7 @@ Here are more detailed examples of how to use the `axiomod validator` subcommand
 axiomod validator architecture
 
 # Validate architecture in a specific directory
-axiomod validator architecture ./internal/examples/example
+axiomod validator architecture ./examples/example
 
 # Validate architecture using a custom rules file
 axiomod validator architecture --config ./custom-rules.json
@@ -318,7 +316,7 @@ axiomod validator architecture --config ./custom-rules.json
 axiomod validator naming
 
 # Validate naming conventions in a specific directory
-axiomod validator naming ./internal/examples/example
+axiomod validator naming ./examples
 
 # Specify custom directories for SQL migrations and API handlers
 axiomod validator naming --sql ./db/migrations --api ./api/handlers
@@ -334,7 +332,7 @@ axiomod validator naming --json
 axiomod validator domain
 
 # Validate domain boundaries in a specific directory
-axiomod validator domain ./internal/examples/example
+axiomod validator domain ./examples/example
 
 # Validate domain boundaries using a custom rules file
 axiomod validator domain --config ./custom-rules.json
@@ -347,7 +345,7 @@ axiomod validator domain --config ./custom-rules.json
 axiomod validator static-analysis
 
 # Run staticcheck in a specific directory
-axiomod validator static-check ./internal/framework/logger
+axiomod validator static-check ./framework/logger
 
 # Run gosec security scanner
 axiomod validator security

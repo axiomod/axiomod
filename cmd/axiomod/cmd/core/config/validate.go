@@ -22,7 +22,7 @@ Example:
 		fmt.Println("Validating configuration files...")
 
 		// Check if config directory exists
-		configDir := "internal/framework/config"
+		configDir := "framework/config"
 		if _, err := os.Stat(configDir); os.IsNotExist(err) {
 			fmt.Println("No config directory found.")
 			return

@@ -29,7 +29,7 @@ go build -o bin/axiomod-server ./cmd/axiomod-server
 
 ```bash
 # Build the Docker image
-docker build -t axiomod-framework:latest .
+docker build -t axiomod:latest .
 ```
 
 ## Configuration
@@ -210,7 +210,7 @@ spec:
     spec:
       containers:
       - name: axiomod
-        image: axiomod-framework:latest
+        image: axiomod:latest
         ports:
         - containerPort: 8080
         - containerPort: 9090

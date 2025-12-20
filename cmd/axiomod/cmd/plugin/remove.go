@@ -23,7 +23,7 @@ Example:
 		fmt.Printf("Removing plugin: %s\n", pluginName)
 
 		// Define plugin directory
-		pluginDir := filepath.Join("internal", "plugins", pluginName)
+		pluginDir := filepath.Join("plugins", pluginName)
 
 		// Check if plugin directory exists
 		if _, err := os.Stat(pluginDir); os.IsNotExist(err) {
@@ -39,11 +39,11 @@ Example:
 			os.Exit(1)
 		}
 
-		// Update the main plugin registration file (e.g., internal/plugins/builtin_plugins.go)
+		// Update the main plugin registration file (e.g., plugins/builtin_plugins.go)
 		// This part requires more complex code modification (AST parsing or simple text removal)
 		// For simplicity, we will just print a message here.
 		fmt.Println("\nPlugin directory removed.")
-		fmt.Println("Please manually unregister the plugin from internal/plugins/builtin_plugins.go")
+		fmt.Println("Please manually unregister the plugin from plugins/builtin_plugins.go")
 		fmt.Println("and remove its options from cmd/axiomod-server/fx_options.go")
 
 		fmt.Printf("\nPlugin %s removed successfully (manual unregistration required).\n", pluginName)

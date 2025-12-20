@@ -28,7 +28,7 @@ Example:
 		fmt.Printf("Comparing configuration between %s and %s...\n", env1, env2)
 
 		// Check if config directory exists
-		configDir := "internal/framework/config"
+		configDir := "framework/config"
 		if _, err := os.Stat(configDir); os.IsNotExist(err) {
 			fmt.Println("No config directory found.")
 			return

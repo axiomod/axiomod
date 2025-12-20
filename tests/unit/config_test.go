@@ -3,7 +3,7 @@ package unit_test
 import (
 	"testing"
 
-	"axiomod/internal/framework/config"
+	"github.com/axiomod/axiomod/framework/config"
 
 	"github.com/stretchr/testify/assert"
 )

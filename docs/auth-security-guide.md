@@ -32,13 +32,13 @@ func (s *LoginService) Login(ctx context.Context, user, pass string) (string, er
 
 ### Middleware
 
-The `internal/framework/middleware` package provides an `AuthMiddleware` (for Fiber) that automatically validates incoming JWT tokens in the `Authorization: Bearer <token>` header.
+The `github.com/axiomod/axiomod/framework/middleware` package provides an `AuthMiddleware` (for Fiber) that automatically validates incoming JWT tokens in the `Authorization: Bearer <token>` header.
 
 ## 2. OIDC / Keycloak Integration
 
 For enterprise environments, the framework supports OIDC discovery and token verification.
 
-### Configuration
+### Provider Configuration
 
 Settings for Keycloak are managed via the `KeycloakPlugin`:
 
@@ -59,7 +59,7 @@ When the `KeycloakPlugin` starts, it automatically performs OIDC discovery to fe
 
 ### Usage in Code
 
-The `OIDCService` in `internal/framework/auth/oidc.go` can be used to verify OIDC tokens:
+The `OIDCService` in `framework/auth/oidc.go` can be used to verify OIDC tokens:
 
 ```go
 claims, err := oidcService.VerifyToken(ctx, tokenString)

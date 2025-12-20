@@ -1,10 +1,10 @@
 package main
 
 import (
-	"axiomod/internal/framework/worker"
-	"axiomod/internal/platform/observability"
-	"axiomod/internal/platform/server"
-	"axiomod/internal/plugins"
+	"github.com/axiomod/axiomod/framework/worker"
+	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/platform/server"
+	"github.com/axiomod/axiomod/plugins"
 
 	"go.uber.org/fx"
 )

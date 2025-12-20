@@ -50,7 +50,7 @@ service_config.yaml
 
 # Temporary builds
 tmp/
-
+agent-tasks/
 # Terraform (if used later)
 .terraform/
 .terraform.lock.hcl

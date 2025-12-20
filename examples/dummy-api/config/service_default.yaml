@@ -1,0 +1,32 @@
+app:
+  name: "examples/dummy-api"
+  environment: development
+  version: 1.0.0
+  debug: true
+
+http:
+  host: 0.0.0.0
+  port: 8080
+  readTimeout: 30
+  writeTimeout: 30
+
+grpc:
+  host: 0.0.0.0
+  port: 50051
+
+observability:
+  logLevel: info
+  logFormat: text
+  tracingEnabled: false
+  tracingURL: "http://localhost:14268/api/traces"
+  metricsEnabled: true
+  metricsPort: 9090
+
+# database:
+#   driver: "postgres"
+#   host: "localhost"
+#   port: 5432
+#   user: "postgres"
+#   password: "password"
+#   name: "axiomod"
+#   sslMode: "disable"

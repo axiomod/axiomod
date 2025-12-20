@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"axiomod/internal/framework/config"
-	"axiomod/internal/framework/auth"
-	"axiomod/internal/framework/cache"
-	"axiomod/internal/framework/circuitbreaker"
-	"axiomod/internal/framework/worker"
-	"axiomod/internal/platform/observability"
+	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/auth"
+	"github.com/axiomod/axiomod/framework/cache"
+	"github.com/axiomod/axiomod/framework/circuitbreaker"
+	"github.com/axiomod/axiomod/framework/worker"
+	"github.com/axiomod/axiomod/platform/observability"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -52,7 +52,7 @@ http:
 	 assert.Equal(t, 9090, cfg.HTTP.Port)
 
 	 // Test loading with empty path (should load defaults from service_default.yaml)
-	 // Ensure service_default.yaml exists in a location Viper checks (e.g., ./internal/framework/config)
+	 // Ensure service_default.yaml exists in a location Viper checks (e.g., ./framework/config)
 	 cfgDefault, errDefault := config.Load("")
 	 assert.NoError(t, errDefault)
 	 assert.NotNil(t, cfgDefault)

@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"axiomod/internal/framework/config"
-	"axiomod/internal/platform/observability"
+	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/platform/observability"
 
 	"go.uber.org/fx"
 )

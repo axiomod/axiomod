@@ -263,28 +263,28 @@ func getDefaultDomainRules() *ArchitectureRules {
 			"infrastructure/cache": {"entity"},
 			// Infrastructure messaging can depend on entity
 			"infrastructure/messaging": {"entity"},
-			// Platform can depend on config
-			"platform/*": {"config"},
+			// Platform can depend on framework/config
+			"platform/*": {"framework/config"},
 			// Plugins can depend on platform
 			"plugins/*": {"platform/*"},
 
 			// Full paths for internal modules
-			"internal/example/entity":                     {},
-			"internal/example/repository":                 {"internal/example/entity"},
-			"internal/example/usecase":                    {"internal/example/entity", "internal/example/repository", "internal/example/service"},
-			"internal/example/service":                    {"internal/example/entity", "internal/example/repository"},
-			"internal/example/delivery/http":              {"internal/example/usecase", "internal/example/entity", "internal/example/delivery/http/middleware"},
-			"internal/example/delivery/grpc":              {"internal/example/usecase", "internal/example/entity"},
-			"internal/example/infrastructure/persistence": {"internal/example/entity", "internal/example/repository"},
-			"internal/example/infrastructure/cache":       {"internal/example/entity"},
-			"internal/example/infrastructure/messaging":   {"internal/example/entity"},
+			"examples/example/entity":                     {},
+			"examples/example/repository":                 {"examples/example/entity"},
+			"examples/example/usecase":                    {"examples/example/entity", "examples/example/repository", "examples/example/service"},
+			"examples/example/service":                    {"examples/example/entity", "examples/example/repository"},
+			"examples/example/delivery/http":              {"examples/example/usecase", "examples/example/entity", "examples/example/delivery/http/middleware"},
+			"examples/example/delivery/grpc":              {"examples/example/usecase", "examples/example/entity"},
+			"examples/example/infrastructure/persistence": {"examples/example/entity", "examples/example/repository"},
+			"examples/example/infrastructure/cache":       {"examples/example/entity"},
+			"examples/example/infrastructure/messaging":   {"examples/example/entity"},
 		},
 		DomainRules: DomainRules{
 			AllowCrossDomainDependencies: false,
 			AllowedCrossDomainImports: []CrossDomainDependency{
 				{
-					Source:      "internal/example",
-					Target:      "internal/platform",
+					Source:      "examples/example",
+					Target:      "platform",
 					Explanation: "Example domain can import platform components",
 				},
 			},
@@ -306,7 +306,7 @@ func extractImports(filePath string) ([]Import, error) {
 		path := strings.Trim(imp.Path.Value, "\"")
 
 		// Only consider internal project imports
-		if strings.Contains(path, "/internal/") || strings.Contains(path, "axiomod/") {
+		if strings.Contains(path, "github.com/axiomod/axiomod/") {
 			imports = append(imports, Import{
 				Path: path,
 				File: filePath,
@@ -333,30 +333,30 @@ func identifyModule(filePath string, allowedDeps map[string][]string) string {
 	// Normalize path separators
 	relPath = filepath.ToSlash(relPath)
 
-	// Check if the file is in internal/example structure
-	if strings.Contains(relPath, "internal/example/") {
+	// Check if the file is in examples/example structure
+	if strings.Contains(relPath, "examples/example/") {
 		parts := strings.Split(relPath, "/")
 		if len(parts) >= 4 {
-			// For deeper paths like internal/example/delivery/http
+			// For deeper paths like examples/example/delivery/http
 			if len(parts) >= 5 && (parts[3] == "delivery" || parts[3] == "infrastructure") {
-				return "internal/example/" + parts[3] + "/" + parts[4]
+				return "examples/example/" + parts[3] + "/" + parts[4]
 			}
-			// For paths like internal/example/entity, internal/example/repository, etc.
-			return "internal/example/" + parts[3]
+			// For paths like examples/example/entity, examples/example/repository, etc.
+			return "examples/example/" + parts[3]
 		}
-		return "internal/example"
-	} else if strings.Contains(relPath, "internal/platform/") {
+		return "examples/example"
+	} else if strings.HasPrefix(relPath, "platform/") {
 		parts := strings.Split(relPath, "/")
-		if len(parts) >= 4 {
-			return "internal/platform/" + parts[3]
+		if len(parts) >= 2 {
+			return "platform/" + parts[1]
 		}
-		return "internal/platform"
-	} else if strings.Contains(relPath, "internal/plugins/") {
+		return "platform"
+	} else if strings.HasPrefix(relPath, "plugins/") {
 		parts := strings.Split(relPath, "/")
-		if len(parts) >= 4 {
-			return "internal/plugins/" + parts[3]
+		if len(parts) >= 2 {
+			return "plugins/" + parts[1]
 		}
-		return "internal/plugins"
+		return "plugins"
 	}
 
 	// Legacy code paths - check for simple module names
@@ -392,7 +392,7 @@ func validateImportsWithDetails(imports map[string][]Import, rules *Architecture
 			}
 
 			// Special case for domain-to-domain dependencies
-			if (strings.HasPrefix(module, "internal/example/") && strings.HasPrefix(importModule, "internal/example/")) ||
+			if (strings.HasPrefix(module, "examples/example/") && strings.HasPrefix(importModule, "examples/example/")) ||
 				(strings.HasPrefix(module, "domain/") && strings.HasPrefix(importModule, "domain/")) {
 				if !validateDomainDependency(module, importModule, rules) {
 					errors = append(errors, fmt.Sprintf("Cross-domain dependency not allowed: '%s' should not import '%s' (in file %s)",
@@ -471,27 +471,21 @@ func validateDomainDependency(source, target string, rules *ArchitectureRules) b
 
 // convertImportToModule converts an import path to a module name
 func convertImportToModule(importPath string) string {
-	if strings.Contains(importPath, "/internal/example/") {
-		parts := strings.Split(importPath, "/internal/example/")
+	if strings.Contains(importPath, "/examples/example/") {
+		parts := strings.Split(importPath, "/examples/example/")
 		if len(parts) >= 2 {
 			subParts := strings.Split(parts[1], "/")
 			if len(subParts) >= 2 && (subParts[0] == "delivery" || subParts[0] == "infrastructure") {
-				return "internal/example/" + subParts[0] + "/" + subParts[1]
+				return "examples/example/" + subParts[0] + "/" + subParts[1]
 			}
-			return "internal/example/" + subParts[0]
+			return "examples/example/" + subParts[0]
 		}
-	} else if strings.Contains(importPath, "/internal/platform/") {
-		parts := strings.Split(importPath, "/internal/platform/")
-		if len(parts) >= 2 {
-			subParts := strings.Split(parts[1], "/")
-			return "internal/platform/" + subParts[0]
-		}
-	} else if strings.Contains(importPath, "/internal/plugins/") {
-		parts := strings.Split(importPath, "/internal/plugins/")
-		if len(parts) >= 2 {
-			subParts := strings.Split(parts[1], "/")
-			return "internal/plugins/" + subParts[0]
-		}
+	} else if strings.HasPrefix(importPath, "github.com/axiomod/axiomod/platform/") {
+		return strings.TrimPrefix(importPath, "github.com/axiomod/axiomod/")
+	} else if strings.HasPrefix(importPath, "github.com/axiomod/axiomod/plugins/") {
+		return strings.TrimPrefix(importPath, "github.com/axiomod/axiomod/")
+	} else if strings.HasPrefix(importPath, "github.com/axiomod/axiomod/framework/") {
+		return strings.TrimPrefix(importPath, "github.com/axiomod/axiomod/")
 	} else if strings.Contains(importPath, "/internal/") {
 		parts := strings.Split(importPath, "/internal/")
 		if len(parts) >= 2 {

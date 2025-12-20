@@ -1,0 +1,46 @@
+# CLI Configuration for Axiomod
+
+cli:
+  # General CLI settings
+  name: axiomod
+  version: 1.0.0
+  description: "Enterprise-grade Go macroservice framework CLI"
+  
+  # Command defaults
+  defaults:
+    # Default values for generate commands
+    generate:
+      module:
+        template_dir: "./templates/module"
+      service:
+        template_dir: "./templates/service"
+      handler:
+        template_dir: "./templates/handler"
+    
+    # Default values for migrate commands
+    migrate:
+      dir: "./migrations"
+      dialect: "postgres"
+    
+    # Default values for validator commands
+    validator:
+      architecture:
+        rules_file: "./architecture-rules.json"
+      naming:
+        sql_dir: "./platform/ent/migrate/migrations"
+        api_dir: "./examples/example/delivery/http"
+    
+    # Default values for plugin commands
+    plugin:
+      registry: "https://axiomod-plugins.example.com"
+      install_dir: "./plugins"
+
+  # Logging settings for CLI
+  logging:
+    level: "info"
+    format: "text"  # text or json
+    
+  # Output settings
+  output:
+    color: true
+    verbose: false

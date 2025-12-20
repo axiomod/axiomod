@@ -16,7 +16,7 @@ var testCmd = &cobra.Command{
 
 Example:
   axiomod test
-  axiomod test ./internal/example/...
+  axiomod test ./examples/example/...
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Running tests...")

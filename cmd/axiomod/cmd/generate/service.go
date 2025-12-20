@@ -63,8 +63,8 @@ import (
 
 	"go.uber.org/zap"
 	// Import repository and entity if needed
-	// "axiomod/internal/examples/{{.ModuleName}}/entity"
-	"axiomod/internal/examples/{{.ModuleName}}/repository"
+	// "github.com/axiomod/axiomod/examples/{{.ModuleName}}/entity"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/repository"
 )
 
 // {{.ServiceName}} defines the interface for the {{.ModuleName}} service.
@@ -107,7 +107,7 @@ func (s *{{.ModuleName}}Service) ProcessData(ctx context.Context, data string) e
 
 import (
 	"context"
-	"axiomod/internal/examples/{{.ModuleName}}/entity"
+	"github.com/axiomod/axiomod/examples/{{.ModuleName}}/entity"
 )
 
 // {{.RepositoryName}} defines the interface for data access operations for {{.EntityName}}.

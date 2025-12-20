@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"axiomod/internal/framework/config"
-	"axiomod/internal/framework/worker"
-	"axiomod/internal/platform/observability"
-	"axiomod/internal/platform/server"
-	"axiomod/internal/plugins"
+	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/worker"
+	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/platform/server"
+	"github.com/axiomod/axiomod/plugins"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"

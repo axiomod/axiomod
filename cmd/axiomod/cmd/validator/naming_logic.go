@@ -130,7 +130,7 @@ func RunNamingValidation(dirPath string, sqlPath string, apiPath string, jsonOut
 	validateDatabaseNaming(sqlDir, validator, &summary)
 
 	// Validate Ent schemas
-	entDir := filepath.Join(rootDir, filepath.FromSlash("internal/platform/ent/schema"))
+	entDir := filepath.Join(rootDir, filepath.FromSlash("platform/ent/schema"))
 	validateEntSchemas(entDir, validator, &summary)
 
 	// Update summary counters

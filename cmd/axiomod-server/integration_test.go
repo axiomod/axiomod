@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"axiomod/internal/examples/example/delivery/http/middleware"
-	"axiomod/internal/platform/observability"
+	"github.com/axiomod/axiomod/examples/example/delivery/http/middleware"
+	"github.com/axiomod/axiomod/platform/observability"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

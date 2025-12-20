@@ -1,4 +1,4 @@
-module axiomod
+module github.com/axiomod/axiomod
 
 go 1.24.2
 

@@ -6,7 +6,7 @@ The Enterprise Axiomod provides a flexible plugin system that allows you to exte
 
 ## Plugin Interface
 
-All plugins must implement the `Plugin` interface defined in `internal/plugins/plugin.go`:
+All plugins must implement the `Plugin` interface defined in `plugins/plugin.go`:
 
 ```go
 type Plugin interface {
@@ -28,10 +28,10 @@ type Plugin interface {
 
 ### 1. Create a new package
 
-Create a new package for your plugin in the `internal/plugins` directory:
+Create a new package for your plugin in the `plugins` directory:
 
 ```bash
-mkdir -p internal/plugins/my_plugin
+mkdir -p plugins/my_plugin
 ```
 
 ### 2. Implement the Plugin interface
@@ -42,7 +42,7 @@ Create a new file `my_plugin.go` in the package and implement the Plugin interfa
 package my_plugin
 
 import (
-    "axiomod/internal/plugins"
+    "github.com/axiomod/axiomod/plugins"
 )
 
 // MyPlugin is a custom plugin implementation
@@ -82,7 +82,7 @@ func (p *MyPlugin) IsActive() bool {
 
 ### 3. Register the plugin
 
-Register your plugin in the `registerBuiltInPlugins` method in `internal/plugins/plugin.go`:
+Register your plugin in the `registerBuiltInPlugins` method in `plugins/plugin.go`:
 
 ```go
 func (r *PluginRegistry) registerBuiltInPlugins() {
@@ -199,7 +199,7 @@ package greeter
 
 import (
     "fmt"
-    "axiomod/internal/plugins"
+    "github.com/axiomod/axiomod/plugins"
     "go.uber.org/zap"
 )
 

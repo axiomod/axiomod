@@ -11,11 +11,11 @@ import (
 	"github.com/spf13/viper"
 
 	// Import command packages
-	"axiomod/cmd/axiomod/cmd/core"
-	"axiomod/cmd/axiomod/cmd/generate"
-	"axiomod/cmd/axiomod/cmd/migrate"
-	"axiomod/cmd/axiomod/cmd/plugin"
-	"axiomod/cmd/axiomod/cmd/validator"
+	"github.com/axiomod/axiomod/cmd/axiomod/cmd/core"
+	"github.com/axiomod/axiomod/cmd/axiomod/cmd/generate"
+	"github.com/axiomod/axiomod/cmd/axiomod/cmd/migrate"
+	"github.com/axiomod/axiomod/cmd/axiomod/cmd/plugin"
+	"github.com/axiomod/axiomod/cmd/axiomod/cmd/validator"
 )
 
 var cfgFile string

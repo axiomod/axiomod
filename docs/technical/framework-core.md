@@ -38,13 +38,13 @@ The framework manages the lifecycle of components using Fx hooks.
 
 ### Built-in Lifecycles
 
-- **HTTP Server:** Managed in `internal/platform/server`. Starts on a configured port and shuts down gracefully.
-- **Plugin Registry:** Managed in `internal/plugins`. Automatically starts and stops all enabled plugins.
-- **Background Worker:** Managed in `internal/framework/worker`. Ensures all jobs are stopped on application shutdown.
+- **HTTP Server:** Managed in `platform/server`. Starts on a configured port and shuts down gracefully.
+- **Plugin Registry:** Managed in `plugins`. Automatically starts and stops all enabled plugins.
+- **Background Worker:** Managed in `framework/worker`. Ensures all jobs are stopped on application shutdown.
 
 ## 3. Error Handling
 
-A standard error handling mechanism is provided in `internal/framework/errors`.
+A standard error handling mechanism is provided in `framework/errors`.
 
 ### Guidelines
 
@@ -55,7 +55,7 @@ A standard error handling mechanism is provided in `internal/framework/errors`.
 
 ## 4. How-To: Adding a New Plugin
 
-1. Create a new struct implementing the `Plugin` interface in `internal/plugins`.
+1. Create a new struct implementing the `Plugin` interface in `plugins`.
 2. Implement `Name()`, `Initialize()`, `Start()`, and `Stop()`.
 3. Register the plugin in `PluginRegistry` (currently in `builtin_plugins.go`).
 4. Enable the plugin in `service_default.yaml`.

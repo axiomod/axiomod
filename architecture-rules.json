@@ -1,83 +1,154 @@
 {
   "allowedDependencies": {
     "entity": [],
-    "repository": ["entity"],
-    "usecase": ["entity", "repository", "service"],
-    "service": ["entity", "repository"],
-    "delivery/http": ["usecase", "entity", "middleware"],
-    "delivery/grpc": ["usecase", "entity"],
-    "infrastructure/persistence": ["entity", "repository"],
-    "infrastructure/cache": ["entity"],
-    "infrastructure/messaging": ["entity"],
-    "platform/*": ["config"],
-    "plugins/*": ["platform/*"],
-    
-    "internal/example/entity": [],
-    "internal/example/repository": ["internal/example/entity"],
-    "internal/example/usecase": ["internal/example/entity", "internal/example/repository", "internal/example/service"],
-    "internal/example/service": ["internal/example/entity", "internal/example/repository"],
-    "internal/example/delivery/http": ["internal/example/usecase", "internal/example/entity", "internal/example/delivery/http/middleware"],
-    "internal/example/delivery/grpc": ["internal/example/usecase", "internal/example/entity"],
-    "internal/example/infrastructure/persistence": ["internal/example/entity", "internal/example/repository"],
-    "internal/example/infrastructure/cache": ["internal/example/entity"],
-    "internal/example/infrastructure/messaging": ["internal/example/entity"],
-    
-    "internal/platform/*": ["internal/config", "pkg/*"],
-    "internal/plugins/*": ["internal/platform/*", "pkg/*"]
+    "repository": [
+      "entity"
+    ],
+    "usecase": [
+      "entity",
+      "repository",
+      "service"
+    ],
+    "service": [
+      "entity",
+      "repository"
+    ],
+    "delivery/http": [
+      "usecase",
+      "entity",
+      "middleware"
+    ],
+    "delivery/grpc": [
+      "usecase",
+      "entity"
+    ],
+    "infrastructure/persistence": [
+      "entity",
+      "repository"
+    ],
+    "infrastructure/cache": [
+      "entity"
+    ],
+    "infrastructure/messaging": [
+      "entity"
+    ],
+    "examples/example/entity": [],
+    "examples/example/repository": [
+      "examples/example/entity"
+    ],
+    "examples/example/usecase": [
+      "examples/example/entity",
+      "examples/example/repository",
+      "examples/example/service"
+    ],
+    "examples/example/service": [
+      "examples/example/entity",
+      "examples/example/repository"
+    ],
+    "examples/example/delivery/http": [
+      "examples/example/usecase",
+      "examples/example/entity",
+      "examples/example/delivery/http/middleware"
+    ],
+    "examples/example/delivery/grpc": [
+      "examples/example/usecase",
+      "examples/example/entity"
+    ],
+    "examples/example/infrastructure/persistence": [
+      "examples/example/entity",
+      "examples/example/repository"
+    ],
+    "examples/example/infrastructure/cache": [
+      "examples/example/entity"
+    ],
+    "examples/example/infrastructure/messaging": [
+      "examples/example/entity"
+    ],
+    "platform/*": [
+      "framework/config",
+      "framework/*"
+    ],
+    "plugins/*": [
+      "platform/*",
+      "framework/*"
+    ]
   },
   "exceptions": [
     "_test.go",
     "mock_",
     "testdata",
-    "internal/platform/ent/schema",
-    "internal/platform/ent/migrate"
+    "platform/ent/schema",
+    "platform/ent/migrate"
   ],
   "patternRules": [
     {
       "pattern": "internal/*/entity",
-      "allowedToImport": "pkg/*",
-      "explanation": "Entities can import utility packages"
+      "allowedToImport": "framework/*",
+      "explanation": "Entities can import framework utility packages"
     },
     {
       "pattern": "internal/*/repository",
-      "allowedToImport": "internal/platform/ent",
-      "explanation": "Repositories can import the Ent ORM"
+      "allowedToImport": "platform/ent",
+      "explanation": "Repositories can import the Ent ORM from platform"
     },
     {
       "pattern": "internal/*/delivery/*",
-      "allowedToImport": "internal/platform/server",
-      "explanation": "Delivery layers can import server components"
+      "allowedToImport": "platform/server",
+      "explanation": "Delivery layers can import server components from platform"
     },
     {
       "pattern": "internal/*/infrastructure/*",
-      "allowedToImport": "internal/platform/*",
+      "allowedToImport": "platform/*",
       "explanation": "Infrastructure can import platform components"
     },
     {
       "pattern": "internal/*/usecase",
-      "allowedToImport": "pkg/validation",
-      "explanation": "Use cases can import validation utilities"
+      "allowedToImport": "framework/validation",
+      "explanation": "Use cases can import validation utilities from framework"
     }
   ],
   "domainRules": {
     "allowCrossDomainDependencies": false,
     "allowedCrossDomainImports": [
       {
-        "source": "internal/example",
-        "target": "internal/platform",
+        "source": "examples/example",
+        "target": "platform",
         "explanation": "Example domain can import platform components"
       }
     ],
     "allowedInternalStructure": {
       "entity": [],
-      "repository": ["entity"],
-      "usecase": ["entity", "repository", "service"],
-      "service": ["entity", "repository"],
-      "delivery/http": ["usecase", "entity", "middleware"],
-      "delivery/grpc": ["usecase", "entity"],
-      "infrastructure/persistence": ["entity", "repository"],
-      "infrastructure/cache": ["entity"],
-      "infrastructure/messaging": ["entity"]
+      "repository": [
+        "entity"
+      ],
+      "usecase": [
+        "entity",
+        "repository",
+        "service"
+      ],
+      "service": [
+        "entity",
+        "repository"
+      ],
+      "delivery/http": [
+        "usecase",
+        "entity",
+        "middleware"
+      ],
+      "delivery/grpc": [
+        "usecase",
+        "entity"
+      ],
+      "infrastructure/persistence": [
+        "entity",
+        "repository"
+      ],
+      "infrastructure/cache": [
+        "entity"
+      ],
+      "infrastructure/messaging": [
+        "entity"
+      ]
     }
   }
 }
