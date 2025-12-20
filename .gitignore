@@ -1,0 +1,60 @@
+# Binaries
+# -------------
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with 'go test -c'
+*.test
+
+# Output of the go coverage tool
+*.out
+cover.out
+coverage.txt
+
+# Dependency directories
+# vendor/ # Uncomment if you want to ignore the vendor directory
+
+# Go workspace file
+go.work
+go.work.sum
+
+# IDEs and Editors
+# -----------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS Specific
+# -----------
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Logs
+# ----
+*.log
+
+# Project Specific
+# ----------------
+# Secrets and local config overrides
+*.env
+internal/framework/config/service_local.yaml
+service_config.yaml
+
+# Temporary builds
+tmp/
+
+# Terraform (if used later)
+.terraform/
+.terraform.lock.hcl
+
+# Keycloak/Certificates (local dev)
+*.pem
+*.key

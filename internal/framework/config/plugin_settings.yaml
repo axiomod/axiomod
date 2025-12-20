@@ -1,0 +1,71 @@
+# Plugin Configuration Settings
+
+plugins:
+  # Global plugin settings
+  global:
+    enabled: true
+    auto_update: false
+    log_level: "info"
+  
+  # Database plugins
+  database:
+    mysql:
+      enabled: true
+      max_open_conns: 10
+      max_idle_conns: 5
+      conn_max_lifetime: 300
+    postgres:
+      enabled: true
+      max_open_conns: 10
+      max_idle_conns: 5
+      conn_max_lifetime: 300
+    mongodb:
+      enabled: false
+  
+  # Authentication plugins
+  auth:
+    jwt:
+      enabled: true
+      algorithm: "HS256"
+      duration: 3600
+    oauth:
+      enabled: false
+    keycloak:
+      enabled: false
+    casdoor:
+      enabled: false
+  
+  # Cache plugins
+  cache:
+    redis:
+      enabled: true
+      max_retries: 3
+      pool_size: 10
+    memcached:
+      enabled: false
+  
+  # Messaging plugins
+  messaging:
+    kafka:
+      enabled: true
+      max_retries: 3
+      retry_backoff: 100
+    rabbitmq:
+      enabled: false
+    nats:
+      enabled: false
+  
+  # Observability plugins
+  observability:
+    prometheus:
+      enabled: true
+    jaeger:
+      enabled: true
+    zipkin:
+      enabled: false
+    datadog:
+      enabled: false
+  
+  # Custom plugins
+  custom:
+    # Add custom plugin configurations here

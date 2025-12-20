@@ -1,0 +1,41 @@
+app:
+  name: axiomod-default
+  environment: development
+  version: 1.0.0
+  debug: true
+
+http:
+  host: 0.0.0.0
+  port: 8080
+  readTimeout: 30
+  writeTimeout: 30
+
+grpc:
+  host: 0.0.0.0
+  port: 50051
+
+observability:
+  logLevel: info
+  logFormat: text
+  tracingEnabled: false
+  tracingURL: "http://localhost:14268/api/traces"
+  metricsEnabled: true
+  metricsPort: 9090
+
+# Add other default configurations as needed
+# database:
+#   driver: postgres
+#   host: localhost
+#   port: 5432
+#   user: user
+#   password: password
+#   name: dbname
+#   sslMode: disable
+
+# plugins:
+#   enabled:
+#     example_plugin: true
+#   settings:
+#     example_plugin:
+#       setting1: value1
+
