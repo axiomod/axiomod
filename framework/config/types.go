@@ -7,7 +7,36 @@ type Config struct {
 	Database      DatabaseConfig
 	HTTP          HTTPConfig
 	GRPC          GRPCConfig
+	Auth          AuthConfig
+	Casbin        CasbinConfig
 	Plugins       PluginsConfig
+}
+
+// AuthConfig represents the authentication configuration
+type AuthConfig struct {
+	OIDC OIDCConfig
+	JWT  JWTConfig
+}
+
+// OIDCConfig represents the OIDC configuration
+type OIDCConfig struct {
+	IssuerURL    string
+	ClientID     string
+	ClientSecret string
+	JWKSCacheTTL int // in minutes
+}
+
+// JWTConfig represents the JWT configuration
+type JWTConfig struct {
+	SecretKey     string
+	TokenDuration int // in minutes
+}
+
+// CasbinConfig represents the Casbin RBAC configuration
+type CasbinConfig struct {
+	ModelPath  string
+	PolicyPath string
+	Table      string // for database policy
 }
 
 // AppConfig represents the application-specific configuration

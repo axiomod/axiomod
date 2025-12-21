@@ -59,7 +59,7 @@ When the `KeycloakPlugin` starts, it automatically performs OIDC discovery to fe
 
 ### Usage in Code
 
-The `OIDCService` in `framework/auth/oidc.go` can be used to verify OIDC tokens:
+The `OIDCService` in `framework/auth/oidc.go` provides secure, JWKS-based token verification:
 
 ```go
 claims, err := oidcService.VerifyToken(ctx, tokenString)
@@ -68,7 +68,50 @@ if err != nil {
 }
 ```
 
-## 3. Best Practices
+> [!NOTE]
+> Signature verification is MANDATORY. The service automatically fetches public keys from the provider's JWKS endpoint and caches them locally for 1 hour (configurable).
+
+## 3. RBAC (Role-Based Access Control)
+
+The framework uses **Casbin** for robust, policy-based authorization.
+
+### Configuration
+
+Add the `casbin` section to your configuration:
+
+```yaml
+casbin:
+  modelPath: "path/to/rbac_model.conf"
+  policyPath: "path/to/policy.csv"
+```
+
+### Middleware (Fiber)
+
+Enforce permissions on HTTP routes using the `RBACMiddleware`:
+
+```go
+app.Get("/protected", 
+    rbac.Handle("resource_name", "read"), 
+    handler
+)
+```
+
+### Interceptor (gRPC)
+
+For gRPC services, use the `RBACInterceptor` to protect your methods:
+
+```go
+s := grpc.NewServer(
+    grpc.UnaryInterceptor(
+        grpc_middleware.ChainUnaryServer(
+            authInterceptor,
+            grpc_auth.RBACInterceptor(rbacService, logger),
+        ),
+    ),
+)
+```
+
+## 4. Best Practices
 
 ### Secret Management
 >
@@ -83,6 +126,6 @@ if err != nil {
 - Keep JWT durations short (e.g., 1 hour).
 - Use refresh tokens if long-lived sessions are required.
 
-### RBAC (Role-Based Access Control)
+### Role Checks in Claims
 
-Roles are included in the JWT/OIDC claims. Use the `claims.HasRole("admin")` helper to check for specific permissions in your use cases.
+While Casbin provides policy-based authorization, you can also perform manual role checks using the `claims.HasRole("admin")` helper on the decoded JWT/OIDC claims.

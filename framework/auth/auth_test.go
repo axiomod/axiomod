@@ -2,6 +2,9 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -81,5 +84,47 @@ func TestOIDCService(t *testing.T) {
 		assert.Error(t, err)
 		// The error can be either a connection error or a 404/non-OK status depending on the environment
 		assert.True(t, strings.Contains(err.Error(), "failed to perform discovery") || strings.Contains(err.Error(), "discovery failed with status"))
+	})
+
+	t.Run("Discovery with Mock Server", func(t *testing.T) {
+		// Create a mock OIDC provider server
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Serve Discovery Document
+			if strings.HasSuffix(r.URL.Path, "/.well-known/openid-configuration") {
+				w.Header().Set("Content-Type", "application/json")
+				// We need to use the server's actual URL for the endpoints
+				_ = json.NewEncoder(w).Encode(OIDCDiscovery{
+					Issuer:   "https://mock.com",           // Issuer can be anything as long as we validate it matching
+					JWKSURL:  "http://" + r.Host + "/jwks", // Point back to this server
+					AuthURL:  "http://" + r.Host + "/auth",
+					TokenURL: "http://" + r.Host + "/token",
+				})
+				return
+			}
+			// Serve JWKS
+			if strings.HasSuffix(r.URL.Path, "/jwks") {
+				w.Header().Set("Content-Type", "application/json")
+				// Return empty keyset for now, just to pass parsing
+				w.Write([]byte(`{"keys": []}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}))
+		defer server.Close()
+
+		mockCfg := OIDCConfig{
+			IssuerURL: server.URL,
+			ClientID:  "mock-client",
+		}
+		mockService := NewOIDCService(mockCfg)
+
+		err := mockService.Discover(context.Background())
+		// It will still fail on JWKS initialization because MicahParks/keyfunc tries to fetch the JWKS URL
+		// but at least we cover the Discover method's first half.
+		if err != nil {
+			assert.True(t, strings.Contains(err.Error(), "failed to initialize JWKS"))
+		}
+		assert.NotNil(t, mockService.discovery)
+		assert.Equal(t, "https://mock.com", mockService.discovery.Issuer)
 	})
 }

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -18,6 +19,7 @@ type OIDCConfig struct {
 	ClientSecret string
 	RedirectURL  string
 	Scopes       []string
+	JWKSCacheTTL time.Duration
 }
 
 // OIDCDiscovery represents the OIDC discovery document
@@ -33,17 +35,21 @@ type OIDCDiscovery struct {
 type OIDCService struct {
 	config    OIDCConfig
 	discovery *OIDCDiscovery
+	jwks      keyfunc.Keyfunc
 	mu        sync.RWMutex
 }
 
 // NewOIDCService creates a new OIDCService
 func NewOIDCService(cfg OIDCConfig) *OIDCService {
+	if cfg.JWKSCacheTTL == 0 {
+		cfg.JWKSCacheTTL = 1 * time.Hour
+	}
 	return &OIDCService{
 		config: cfg,
 	}
 }
 
-// Discover performs OIDC discovery
+// Discover performs OIDC discovery and initializes JWKS
 func (s *OIDCService) Discover(ctx context.Context) error {
 	discoveryURL := fmt.Sprintf("%s/.well-known/openid-configuration", s.config.IssuerURL)
 
@@ -68,8 +74,15 @@ func (s *OIDCService) Discover(ctx context.Context) error {
 		return fmt.Errorf("failed to decode discovery document: %w", err)
 	}
 
+	// Initialize JWKS
+	kf, err := keyfunc.NewDefault([]string{discovery.JWKSURL})
+	if err != nil {
+		return fmt.Errorf("failed to initialize JWKS: %w", err)
+	}
+
 	s.mu.Lock()
 	s.discovery = &discovery
+	s.jwks = kf
 	s.mu.Unlock()
 
 	return nil
@@ -79,31 +92,20 @@ func (s *OIDCService) Discover(ctx context.Context) error {
 func (s *OIDCService) VerifyToken(ctx context.Context, tokenString string) (*Claims, error) {
 	s.mu.RLock()
 	discovery := s.discovery
+	jwks := s.jwks
 	s.mu.RUnlock()
 
-	if discovery == nil {
+	if jwks == nil {
 		if err := s.Discover(ctx); err != nil {
 			return nil, err
 		}
 		s.mu.RLock()
 		discovery = s.discovery
+		jwks = s.jwks
 		s.mu.RUnlock()
 	}
 
-	// For a real production implementation, we should fetch and cache JWKS from discovery.JWKSURL
-	// and use those keys to verify the signature.
-	// For this stabilization phase, we assume the token is signed with a method
-	// that we can verify if we have the key, or we delegate to a more robust library.
-	// Here we just parse the claims for now, but in a real app, this MUST verify the signature.
-
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		// In a real implementation, you would:
-		// 1. Get the 'kid' from the token header.
-		// 2. Look up the public key from the cached JWKS.
-		// 3. Return the public key.
-		return nil, fmt.Errorf("signature verification not implementation in this version - use JWKS")
-	})
-
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, jwks.Keyfunc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify token: %w", err)
 	}
@@ -111,6 +113,28 @@ func (s *OIDCService) VerifyToken(ctx context.Context, tokenString string) (*Cla
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
 		return nil, fmt.Errorf("invalid token or claims")
+	}
+
+	// Verify issuer and audience
+	if claims.Issuer != discovery.Issuer {
+		return nil, fmt.Errorf("invalid issuer: expected %s, got %s", discovery.Issuer, claims.Issuer)
+	}
+
+	// Aud usually contains ClientID for ID tokens
+	aud, err := claims.GetAudience()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get audience: %w", err)
+	}
+
+	foundAud := false
+	for _, a := range aud {
+		if a == s.config.ClientID {
+			foundAud = true
+			break
+		}
+	}
+	if !foundAud {
+		return nil, fmt.Errorf("invalid audience: %v", aud)
 	}
 
 	return claims, nil

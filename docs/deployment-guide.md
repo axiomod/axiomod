@@ -8,7 +8,7 @@ This guide provides instructions for deploying the Enterprise Axiomod in various
 
 Before deploying the framework, ensure you have the following:
 
-- Go 1.24.2 or higher
+- Go 1.24 or higher
 - Docker and Docker Compose (for containerized deployment)
 - Kubernetes (for orchestrated deployment)
 - Access to required infrastructure services (databases, message brokers, etc.)
