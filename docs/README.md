@@ -30,6 +30,7 @@ Welcome to the Axiomod documentation. Here you will find everything you need to 
 
 ## 📝 Release Notes
 
+- [v1.4.0 - Enterprise Readiness & Deep Observability](./release-notes/v1.4.0.md)
 - [v1.3.0 - Developer Experience & Observability](./release-notes/v1.3.0.md)
 - [v1.2.0 - Security & Stability Hardening](./release-notes/v1.2.0.md)
 - [v1.0.0 - Initial Release](./release-notes/v1.0.0.md)
