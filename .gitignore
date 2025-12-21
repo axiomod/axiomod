@@ -50,7 +50,7 @@ service_config.yaml
 
 # Temporary builds
 tmp/
-.agent-tasks/
+
 
 # Terraform (if used later)
 .terraform/
@@ -62,3 +62,4 @@ tmp/
 
 # Agent
 .agent/
+.agent-tasks/
