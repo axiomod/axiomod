@@ -2,8 +2,14 @@
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/axiomod/axiomod)](https://golang.org/doc/devel/release.html)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+[![CI](https://github.com/axiomod/axiomod/actions/workflows/ci.yml/badge.svg)](https://github.com/axiomod/axiomod/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/axiomod/axiomod)](https://goreportcard.com/report/github.com/axiomod/axiomod)
+<!--[![CodeQL](https://github.com/axiomod/axiomod/actions/workflows/codeql.yml/badge.svg)](https://github.com/axiomod/axiomod/actions/workflows/codeql.yml)-->
 ![Coverage](https://img.shields.io/badge/coverage-85%25-green)
+[![Release](https://img.shields.io/github/v/release/axiomod/axiomod)](https://github.com/axiomod/axiomod/releases)
 [![License](https://img.shields.io/github/license/axiomod/axiomod)](LICENSE)
+[![Contributors](https://img.shields.io/github/contributors/axiomod/axiomod)](https://github.com/axiomod/axiomod/graphs/contributors)
+
 
 **Axiomod** is a modular, plugin-based, and enterprise-ready framework for building scalable Go services. Built on Clean Architecture principles, it solves the "blank canvas" problem by providing a robust foundation with built-in observability, authentication, and tooling.
 
