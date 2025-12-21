@@ -50,7 +50,7 @@ service_config.yaml
 
 # Temporary builds
 tmp/
-agent-tasks/
+.agent-tasks/
 
 # Terraform (if used later)
 .terraform/
@@ -59,3 +59,6 @@ agent-tasks/
 # Keycloak/Certificates (local dev)
 *.pem
 *.key
+
+# Agent
+.agent/
