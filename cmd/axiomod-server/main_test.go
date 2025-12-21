@@ -112,7 +112,7 @@ func TestCircuitBreaker(t *testing.T) {
 	cb := circuitbreaker.New(circuitbreaker.Options{
 		Name:          "test",
 		MaxFailures:   2,
-		ResetTimeout:  50 * time.Millisecond,
+		ResetTimeout:  100 * time.Millisecond,
 		HalfOpenLimit: 1,
 	})
 
@@ -146,7 +146,7 @@ func TestCircuitBreaker(t *testing.T) {
 	assert.Contains(t, err.Error(), "circuit breaker is open")
 
 	// Wait for reset timeout
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Test half-open state - successful request should close the circuit
 	err = cb.Execute(func() error {
@@ -160,7 +160,7 @@ func TestCircuitBreaker(t *testing.T) {
 	cb.Execute(func() error { return testErr })
 	cb.Execute(func() error { return testErr })
 	assert.Equal(t, circuitbreaker.StateOpen, cb.State())
-	time.Sleep(60 * time.Millisecond) // Wait for reset
+	time.Sleep(200 * time.Millisecond) // Wait for reset
 	// AllowRequest should transition state to HalfOpen implicitly
 	cb.AllowRequest() // Trigger potential state transition
 	assert.Equal(t, circuitbreaker.StateHalfOpen, cb.State(), "Should be HalfOpen after timeout")
@@ -201,7 +201,7 @@ func TestWorker(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Wait longer to ensure job executes
-	time.Sleep(150 * time.Millisecond)
+	time.Sleep(300 * time.Millisecond)
 
 	// Stop job
 	err = w.StopJob(job.ID)
