@@ -27,3 +27,9 @@ Welcome to the Axiomod documentation. Here you will find everything you need to 
 - **[API Reference](./api-reference.md)**: Detailed contracts for HTTP and gRPC APIs.
 - **[Architecture Decision Records](./decision-records/)**: History of major architectural decisions.
 - **[Roadmap](./roadmap.md)**: Future plans and enhancement initiatives.
+
+## 📝 Release Notes
+
+- [v1.3.0 - Developer Experience & Observability](./release-notes/v1.3.0.md)
+- [v1.2.0 - Security & Stability Hardening](./release-notes/v1.2.0.md)
+- [v1.0.0 - Initial Release](./release-notes/v1.0.0.md)
