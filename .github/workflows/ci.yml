@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+        cache: true
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Format Check
+      run: |
+        gofmt -l . > fmt.out
+        if [ -s fmt.out ]; then
+          echo "Code is not formatted:"
+          cat fmt.out
+          exit 1
+        fi
+
+    - name: Vet
+      run: go vet ./...
+
+    - name: Test
+      run: go test -v -race ./...
+
+    - name: Build
+      run: go build -v ./cmd/axiomod-server

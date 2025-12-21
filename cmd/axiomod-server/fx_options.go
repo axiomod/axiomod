@@ -40,6 +40,7 @@ func getModuleOptions() []fx.Option {
 			// Register HTTP and gRPC servers
 			server.RegisterHTTPServer,
 			server.RegisterGRPCServer,
+			RegisterNewPlugins,
 		),
 	}
 }

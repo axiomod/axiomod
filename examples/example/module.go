@@ -54,7 +54,7 @@ func registerHTTPRoutes(app *fiber.App, handler *http.ExampleHandler, authMiddle
 	api.Use(authMiddleware.Handle())
 
 	// Register routes
-	 handler.RegisterRoutes(api)
+	handler.RegisterRoutes(api)
 }
 
 // registerGRPCServices registers the gRPC services for the example module

@@ -1,0 +1,12 @@
+app:
+  environment: "production"
+  debug: false
+
+observability:
+  logLevel: "warn"
+  tracingEnabled: true
+  tracingExporterType: "otlp"
+  metricsEnabled: true
+
+database:
+  sslMode: "verify-full"

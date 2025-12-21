@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -44,11 +45,22 @@ type Provider interface {
 
 	// AllSettings returns all settings from the configuration
 	AllSettings() map[string]interface{}
+
+	// WatchConfig watches for changes in the configuration
+	WatchConfig(onChange func())
 }
 
 // ViperProvider implements the Provider interface using Viper
 type ViperProvider struct {
 	viper *viper.Viper
+}
+
+// WatchConfig watches for changes in the configuration
+func (p *ViperProvider) WatchConfig(onChange func()) {
+	p.viper.WatchConfig()
+	p.viper.OnConfigChange(func(e fsnotify.Event) {
+		onChange()
+	})
 }
 
 // NewViperProvider creates a new ViperProvider

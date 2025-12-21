@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/platform/observability"
 
 	"go.uber.org/zap"
@@ -62,7 +63,7 @@ func (d *DB) WithTransaction(ctx context.Context, fn TransactionFunc) error {
 }
 
 // Connect establishes a connection to the database
-func Connect(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics) (*DB, error) {
+func Connect(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics, health *health.Health) (*DB, error) {
 	dbCfg := cfg.Database
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.Name, dbCfg.SSLMode)
@@ -102,6 +103,13 @@ func Connect(cfg *config.Config, logger *observability.Logger, metrics *observab
 		zap.Int("maxIdleConns", dbCfg.MaxIdleConns),
 		zap.Int("connMaxLifetimeMin", dbCfg.ConnMaxLifetime),
 	)
+
+	// Register health check
+	if health != nil {
+		health.RegisterCheck("database", func() error {
+			return db.Ping()
+		})
+	}
 
 	return New(db, logger, metrics, cfg), nil
 }

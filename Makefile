@@ -5,7 +5,7 @@ CLI_NAME=axiomod
 
 all: build build-cli
 
-VERSION := v1.2.0
+VERSION := v1.4.0
 COMMIT := $(shell git rev-parse HEAD 2>/dev/null || echo "unknown")
 DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 LDFLAGS := -X github.com/axiomod/axiomod/framework/version.Version=$(VERSION) \

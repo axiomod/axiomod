@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/platform/observability"
 
 	"go.uber.org/fx"
@@ -15,7 +16,6 @@ import (
 // Module provides the fx options for the plugins module
 var Module = fx.Options(
 	fx.Provide(NewPluginRegistry),
-	fx.Provide(func(r *PluginRegistry) *PluginRegistry { return r }), // For simpler injection if needed
 	fx.Invoke(RegisterPlugins),
 )
 
@@ -37,7 +37,7 @@ type Plugin interface {
 	Name() string
 
 	// Initialize initializes the plugin with the given configuration, logger, and metrics
-	Initialize(config map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error
+	Initialize(config map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error
 
 	// Start starts the plugin
 	Start() error
@@ -52,16 +52,18 @@ type PluginRegistry struct {
 	config  *config.Config
 	logger  *observability.Logger
 	metrics *observability.Metrics
+	health  *health.Health
 	mu      sync.RWMutex
 }
 
 // NewPluginRegistry creates a new plugin registry
-func NewPluginRegistry(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics) (*PluginRegistry, error) {
+func NewPluginRegistry(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics, health *health.Health) (*PluginRegistry, error) {
 	registry := &PluginRegistry{
 		plugins: make(map[string]Plugin),
 		config:  cfg,
 		logger:  logger,
 		metrics: metrics,
+		health:  health,
 	}
 
 	// Register built-in plugins
@@ -88,11 +90,6 @@ func (r *PluginRegistry) registerBuiltInPlugins() {
 
 	// Register other plugins
 	r.Register(&CasbinPlugin{})
-	r.Register(&LDAPPlugin{})
-	r.Register(&SAMLPlugin{})
-	r.Register(&MultiTenancyPlugin{})
-	r.Register(&AuditingPlugin{})
-	r.Register(&ELKPlugin{})
 }
 
 // Register registers a plugin with the registry
@@ -139,7 +136,7 @@ func (r *PluginRegistry) initializeEnabledPlugins() error {
 		}
 
 		// Initialize plugin
-		if err := plugin.Initialize(pluginSettings, r.logger, r.metrics, r.config); err != nil {
+		if err := plugin.Initialize(pluginSettings, r.logger, r.metrics, r.config, r.health); err != nil {
 			return fmt.Errorf("failed to initialize plugin %s: %w", name, err)
 		}
 

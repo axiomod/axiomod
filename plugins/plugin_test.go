@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/platform/observability"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ type mockPlugin struct {
 }
 
 func (m *mockPlugin) Name() string { return m.name }
-func (m *mockPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+func (m *mockPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
 	m.initialized = true
 	return nil
 }
@@ -47,7 +48,7 @@ func TestPluginRegistry(t *testing.T) {
 
 	t.Run("Register and Lifecycle", func(t *testing.T) {
 		metrics, _ := observability.NewMetrics(obsCfg, logger)
-		registry, err := NewPluginRegistry(cfg, logger, metrics)
+		registry, err := NewPluginRegistry(cfg, logger, metrics, nil)
 		assert.NoError(t, err)
 
 		mock := &mockPlugin{name: "mock"}
@@ -75,7 +76,7 @@ func TestPluginRegistry(t *testing.T) {
 
 	t.Run("Get Plugin", func(t *testing.T) {
 		metrics, _ := observability.NewMetrics(obsCfg, logger)
-		registry, _ := NewPluginRegistry(cfg, logger, metrics)
+		registry, _ := NewPluginRegistry(cfg, logger, metrics, nil)
 		mock := &mockPlugin{name: "mock-2"}
 		registry.Register(mock)
 

@@ -1,8 +1,8 @@
-# Enterprise Axiomod - Architecture Overview
+# Axiomod Framework - Architecture Overview
 
 ## Introduction
 
-The Enterprise Axiomod is a modular, plugin-based framework designed for building enterprise-grade Go applications. It follows clean architecture principles to ensure separation of concerns, testability, and maintainability.
+The Axiomod Framework is a modular, plugin-based framework designed for building scalable Go applications. It follows clean architecture principles to ensure separation of concerns, testability, and maintainability.
 
 ## Core Architecture Principles
 

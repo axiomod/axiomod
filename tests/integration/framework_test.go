@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/worker"
 	"github.com/axiomod/axiomod/platform/observability"
 	"github.com/axiomod/axiomod/platform/server"
@@ -29,6 +30,7 @@ func TestFrameworkBootstrap(t *testing.T) {
 				}, nil
 			}),
 			observability.Module,
+			health.Module,
 			server.Module,
 			plugins.Module,
 			worker.Module,

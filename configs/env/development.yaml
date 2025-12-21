@@ -1,0 +1,12 @@
+app:
+  environment: "development"
+  debug: true
+
+observability:
+  logLevel: "debug"
+  logFormat: "console"
+  tracingEnabled: true
+  tracingExporterType: "stdout"
+
+database:
+  sslMode: "disable"

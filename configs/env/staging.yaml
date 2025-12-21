@@ -1,0 +1,11 @@
+app:
+  environment: "staging"
+  debug: false
+
+observability:
+  logLevel: "info"
+  tracingEnabled: true
+  tracingExporterType: "jaeger"
+
+database:
+  sslMode: "require"

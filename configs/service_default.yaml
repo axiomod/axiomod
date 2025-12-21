@@ -1,0 +1,72 @@
+app:
+  name: "axiomod-service"
+  environment: "local"
+  version: "1.0.0"
+  debug: true
+
+observability:
+  logLevel: "info"
+  logFormat: "json"
+  tracingEnabled: false
+  tracingExporterType: "jaeger" # Options: jaeger, otlp, stdout
+  tracingURL: "http://localhost:14268/api/traces"
+  tracingSamplerRatio: 1.0
+  metricsEnabled: true
+  metricsPort: 9091
+
+database:
+  driver: "postgres" # Options: postgres, mysql
+  host: "localhost"
+  port: 5432
+  user: "axiomod"
+  password: "password"
+  name: "axiomod"
+  sslMode: "disable"
+  maxOpenConns: 25
+  maxIdleConns: 5
+  connMaxLifetime: 15 # minutes
+  slowQueryThreshold: 200 # milliseconds
+
+http:
+  port: 8080
+  host: "0.0.0.0"
+  readTimeout: 10
+  writeTimeout: 10
+
+grpc:
+  port: 9090
+  host: "0.0.0.0"
+
+auth:
+  oidc:
+    issuerUrl: "http://localhost:8080/realms/axiomod"
+    clientId: "axiomod-client"
+    clientSecret: "client-secret"
+    jwksCacheTtl: 60 # minutes
+  jwt:
+    secretKey: "your-256-bit-secret"
+    tokenDuration: 60 # minutes
+
+casbin:
+  modelPath: "./configs/rbac_model.conf"
+  policyPath: "./configs/rbac_policy.csv"
+  table: "casbin_rule"
+
+plugins:
+  enabled:
+    postgres: true
+    mysql: false
+    redis: false
+    kafka: false
+    jwt: true
+    keycloak: false
+    ldap: false
+    saml: false
+    multitenancy: false
+    auditing: false
+    elk: false
+  settings:
+    multitenancy:
+      header: "X-Tenant-ID"
+    elk:
+      elasticsearchUrl: "http://localhost:9200"

@@ -8,6 +8,7 @@ import (
 	"github.com/axiomod/axiomod/framework/auth"
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/database"
+	"github.com/axiomod/axiomod/framework/health"
 
 	"github.com/axiomod/axiomod/platform/observability"
 	"go.uber.org/zap"
@@ -19,6 +20,7 @@ type MySQLPlugin struct {
 	db      *database.DB
 	logger  *observability.Logger
 	metrics *observability.Metrics
+	health  *health.Health
 	cfg     *config.Config
 }
 
@@ -28,10 +30,11 @@ func (p *MySQLPlugin) Name() string {
 }
 
 // Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *MySQLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+func (p *MySQLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
 	p.config = settings
 	p.logger = logger
 	p.metrics = metrics
+	p.health = health
 	p.cfg = cfg
 	return nil
 }
@@ -39,7 +42,7 @@ func (p *MySQLPlugin) Initialize(settings map[string]interface{}, logger *observ
 // Start starts the plugin
 func (p *MySQLPlugin) Start() error {
 	// Connect to the database using the simplified Connect method
-	db, err := database.Connect(p.cfg, p.logger, p.metrics)
+	db, err := database.Connect(p.cfg, p.logger, p.metrics, p.health)
 	if err != nil {
 		return err
 	}
@@ -61,6 +64,7 @@ type PostgreSQLPlugin struct {
 	db      *database.DB
 	logger  *observability.Logger
 	metrics *observability.Metrics
+	health  *health.Health
 	cfg     *config.Config
 }
 
@@ -70,10 +74,11 @@ func (p *PostgreSQLPlugin) Name() string {
 }
 
 // Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *PostgreSQLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+func (p *PostgreSQLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
 	p.config = settings
 	p.logger = logger
 	p.metrics = metrics
+	p.health = health
 	p.cfg = cfg
 	return nil
 }
@@ -81,7 +86,7 @@ func (p *PostgreSQLPlugin) Initialize(settings map[string]interface{}, logger *o
 // Start starts the plugin
 func (p *PostgreSQLPlugin) Start() error {
 	// Connect to the database using the simplified Connect method
-	db, err := database.Connect(p.cfg, p.logger, p.metrics)
+	db, err := database.Connect(p.cfg, p.logger, p.metrics, p.health)
 	if err != nil {
 		return err
 	}
@@ -112,7 +117,7 @@ func (p *JWTPlugin) Name() string {
 }
 
 // Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *JWTPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+func (p *JWTPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
 	p.config = settings
 	p.logger = logger
 	p.metrics = metrics
@@ -154,7 +159,7 @@ func (p *KeycloakPlugin) Name() string {
 }
 
 // Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *KeycloakPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+func (p *KeycloakPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
 	p.config = settings
 	p.logger = logger
 	p.metrics = metrics
@@ -213,7 +218,7 @@ func (p *CasdoorPlugin) Name() string {
 }
 
 // Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *CasdoorPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+func (p *CasdoorPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
 	p.config = settings
 	p.logger = logger
 	p.metrics = metrics
@@ -245,7 +250,7 @@ func (p *CasbinPlugin) Name() string {
 }
 
 // Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *CasbinPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+func (p *CasbinPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
 	p.config = settings
 	p.logger = logger
 	p.metrics = metrics
@@ -260,165 +265,5 @@ func (p *CasbinPlugin) Start() error {
 
 // Stop stops the plugin
 func (p *CasbinPlugin) Stop() error {
-	return nil
-}
-
-// LDAPPlugin implements the LDAP authentication plugin
-type LDAPPlugin struct {
-	config  map[string]interface{}
-	logger  *observability.Logger
-	metrics *observability.Metrics
-	cfg     *config.Config
-}
-
-// Name returns the name of the plugin
-func (p *LDAPPlugin) Name() string {
-	return "ldap"
-}
-
-// Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *LDAPPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
-	p.config = settings
-	p.logger = logger
-	p.metrics = metrics
-	p.cfg = cfg
-	return nil
-}
-
-// Start starts the plugin
-func (p *LDAPPlugin) Start() error {
-	return nil
-}
-
-// Stop stops the plugin
-func (p *LDAPPlugin) Stop() error {
-	return nil
-}
-
-// SAMLPlugin implements the SAML authentication plugin
-type SAMLPlugin struct {
-	config  map[string]interface{}
-	logger  *observability.Logger
-	metrics *observability.Metrics
-	cfg     *config.Config
-}
-
-// Name returns the name of the plugin
-func (p *SAMLPlugin) Name() string {
-	return "saml"
-}
-
-// Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *SAMLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
-	p.config = settings
-	p.logger = logger
-	p.metrics = metrics
-	p.cfg = cfg
-	return nil
-}
-
-// Start starts the plugin
-func (p *SAMLPlugin) Start() error {
-	return nil
-}
-
-// Stop stops the plugin
-func (p *SAMLPlugin) Stop() error {
-	return nil
-}
-
-// MultiTenancyPlugin implements the multi-tenancy plugin
-type MultiTenancyPlugin struct {
-	config  map[string]interface{}
-	logger  *observability.Logger
-	metrics *observability.Metrics
-	cfg     *config.Config
-}
-
-// Name returns the name of the plugin
-func (p *MultiTenancyPlugin) Name() string {
-	return "multitenancy"
-}
-
-// Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *MultiTenancyPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
-	p.config = settings
-	p.logger = logger
-	p.metrics = metrics
-	p.cfg = cfg
-	return nil
-}
-
-// Start starts the plugin
-func (p *MultiTenancyPlugin) Start() error {
-	return nil
-}
-
-// Stop stops the plugin
-func (p *MultiTenancyPlugin) Stop() error {
-	return nil
-}
-
-// AuditingPlugin implements the auditing plugin
-type AuditingPlugin struct {
-	config  map[string]interface{}
-	logger  *observability.Logger
-	metrics *observability.Metrics
-	cfg     *config.Config
-}
-
-// Name returns the name of the plugin
-func (p *AuditingPlugin) Name() string {
-	return "auditing"
-}
-
-// Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *AuditingPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
-	p.config = settings
-	p.logger = logger
-	p.metrics = metrics
-	p.cfg = cfg
-	return nil
-}
-
-// Start starts the plugin
-func (p *AuditingPlugin) Start() error {
-	return nil
-}
-
-// Stop stops the plugin
-func (p *AuditingPlugin) Stop() error {
-	return nil
-}
-
-// ELKPlugin implements the ELK/EFK observability plugin
-type ELKPlugin struct {
-	config  map[string]interface{}
-	logger  *observability.Logger
-	metrics *observability.Metrics
-	cfg     *config.Config
-}
-
-// Name returns the name of the plugin
-func (p *ELKPlugin) Name() string {
-	return "elk"
-}
-
-// Initialize initializes the plugin with the given configuration, logger, and metrics
-func (p *ELKPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
-	p.config = settings
-	p.logger = logger
-	p.metrics = metrics
-	p.cfg = cfg
-	return nil
-}
-
-// Start starts the plugin
-func (p *ELKPlugin) Start() error {
-	return nil
-}
-
-// Stop stops the plugin
-func (p *ELKPlugin) Stop() error {
 	return nil
 }
