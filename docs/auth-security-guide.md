@@ -111,6 +111,21 @@ s := grpc.NewServer(
 )
 ```
 
+### Policy Management via CLI
+
+You can manage Casbin policies and roles directly using the `axiomod policy` command group.
+
+```bash
+# List all policies
+axiomod policy list
+
+# Add a policy
+axiomod policy add --ptype=p --v0=role:admin --v1=resource --v2=action
+
+# Remove a policy
+axiomod policy remove --ptype=p --v0=role:admin --v1=resource --v2=action
+```
+
 ## 4. Best Practices
 
 ### Secret Management

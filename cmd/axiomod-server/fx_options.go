@@ -1,6 +1,10 @@
 package main
 
 import (
+	"github.com/axiomod/axiomod/framework/auth"
+	grpc_pkg "github.com/axiomod/axiomod/framework/grpc"
+	"github.com/axiomod/axiomod/framework/health"
+	"github.com/axiomod/axiomod/framework/middleware"
 	"github.com/axiomod/axiomod/framework/worker"
 	"github.com/axiomod/axiomod/platform/observability"
 	"github.com/axiomod/axiomod/platform/server"
@@ -14,6 +18,10 @@ func getModuleOptions() []fx.Option {
 	return []fx.Option{
 		// Core platform modules
 		observability.Module,
+		middleware.Module,
+		auth.Module,
+		health.Module,
+		grpc_pkg.Module,
 		server.Module,
 		plugins.Module,
 		worker.Module,

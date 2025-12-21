@@ -20,7 +20,8 @@ func TestDB(t *testing.T) {
 
 	t.Run("New DB", func(t *testing.T) {
 		sqlDB := &sql.DB{}
-		db := New(sqlDB, logger)
+		metrics, _ := observability.NewMetrics(obsCfg, logger)
+		db := New(sqlDB, logger, metrics, obsCfg)
 		assert.NotNil(t, db)
 		assert.Equal(t, sqlDB, db.GetDB())
 	})

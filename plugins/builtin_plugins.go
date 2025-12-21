@@ -6,16 +6,20 @@ import (
 	"time"
 
 	"github.com/axiomod/axiomod/framework/auth"
+	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/database"
 
+	"github.com/axiomod/axiomod/platform/observability"
 	"go.uber.org/zap"
 )
 
 // MySQLPlugin implements the MySQL database plugin
 type MySQLPlugin struct {
-	config map[string]interface{}
-	db     *database.DB
-	logger *zap.Logger
+	config  map[string]interface{}
+	db      *database.DB
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -23,22 +27,19 @@ func (p *MySQLPlugin) Name() string {
 	return "mysql"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *MySQLPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *MySQLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
 // Start starts the plugin
 func (p *MySQLPlugin) Start() error {
-	// Extract configuration
-	dsn, _ := p.config["dsn"].(string)
-	maxOpen, _ := p.config["maxOpenConns"].(int)
-	maxIdle, _ := p.config["maxIdleConns"].(int)
-
-	// Connect to the database
-	db, err := database.Connect("mysql", dsn, maxOpen, maxIdle, 0, nil) // observability logger needs to be adapted or passed
+	// Connect to the database using the simplified Connect method
+	db, err := database.Connect(p.cfg, p.logger, p.metrics)
 	if err != nil {
 		return err
 	}
@@ -56,9 +57,11 @@ func (p *MySQLPlugin) Stop() error {
 
 // PostgreSQLPlugin implements the PostgreSQL database plugin
 type PostgreSQLPlugin struct {
-	config map[string]interface{}
-	db     *database.DB
-	logger *zap.Logger
+	config  map[string]interface{}
+	db      *database.DB
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -66,22 +69,19 @@ func (p *PostgreSQLPlugin) Name() string {
 	return "postgresql"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *PostgreSQLPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *PostgreSQLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
 // Start starts the plugin
 func (p *PostgreSQLPlugin) Start() error {
-	// Extract configuration
-	dsn, _ := p.config["dsn"].(string)
-	maxOpen, _ := p.config["maxOpenConns"].(int)
-	maxIdle, _ := p.config["maxIdleConns"].(int)
-
-	// Connect to the database
-	db, err := database.Connect("postgres", dsn, maxOpen, maxIdle, 0, nil)
+	// Connect to the database using the simplified Connect method
+	db, err := database.Connect(p.cfg, p.logger, p.metrics)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,9 @@ func (p *PostgreSQLPlugin) Stop() error {
 type JWTPlugin struct {
 	config  map[string]interface{}
 	service *auth.JWTService
-	logger  *zap.Logger
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -109,10 +111,12 @@ func (p *JWTPlugin) Name() string {
 	return "jwt"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *JWTPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *JWTPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -139,7 +143,9 @@ func (p *JWTPlugin) Stop() error {
 type KeycloakPlugin struct {
 	config  map[string]interface{}
 	service *auth.OIDCService
-	logger  *zap.Logger
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -147,10 +153,12 @@ func (p *KeycloakPlugin) Name() string {
 	return "keycloak"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *KeycloakPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *KeycloakPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -168,7 +176,7 @@ func (p *KeycloakPlugin) Start() error {
 		IssuerURL:    issuer,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-	})
+	}, p.logger)
 
 	// Perform discovery in a separate goroutine or background to avoid blocking startup if Keycloak is down
 	// But OIDC standard usually requires discovery to be successful.
@@ -193,8 +201,10 @@ func (p *KeycloakPlugin) Stop() error {
 
 // CasdoorPlugin implements the Casdoor authentication plugin
 type CasdoorPlugin struct {
-	config map[string]interface{}
-	logger *zap.Logger
+	config  map[string]interface{}
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -202,10 +212,12 @@ func (p *CasdoorPlugin) Name() string {
 	return "casdoor"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *CasdoorPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *CasdoorPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -221,8 +233,10 @@ func (p *CasdoorPlugin) Stop() error {
 
 // CasbinPlugin implements the Casbin authorization plugin
 type CasbinPlugin struct {
-	config map[string]interface{}
-	logger *zap.Logger
+	config  map[string]interface{}
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -230,10 +244,12 @@ func (p *CasbinPlugin) Name() string {
 	return "casbin"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *CasbinPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *CasbinPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -249,8 +265,10 @@ func (p *CasbinPlugin) Stop() error {
 
 // LDAPPlugin implements the LDAP authentication plugin
 type LDAPPlugin struct {
-	config map[string]interface{}
-	logger *zap.Logger
+	config  map[string]interface{}
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -258,10 +276,12 @@ func (p *LDAPPlugin) Name() string {
 	return "ldap"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *LDAPPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *LDAPPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -277,7 +297,10 @@ func (p *LDAPPlugin) Stop() error {
 
 // SAMLPlugin implements the SAML authentication plugin
 type SAMLPlugin struct {
-	config map[string]interface{}
+	config  map[string]interface{}
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -285,9 +308,12 @@ func (p *SAMLPlugin) Name() string {
 	return "saml"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *SAMLPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *SAMLPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
+	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -303,8 +329,10 @@ func (p *SAMLPlugin) Stop() error {
 
 // MultiTenancyPlugin implements the multi-tenancy plugin
 type MultiTenancyPlugin struct {
-	config map[string]interface{}
-	logger *zap.Logger
+	config  map[string]interface{}
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -312,10 +340,12 @@ func (p *MultiTenancyPlugin) Name() string {
 	return "multitenancy"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *MultiTenancyPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *MultiTenancyPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -331,8 +361,10 @@ func (p *MultiTenancyPlugin) Stop() error {
 
 // AuditingPlugin implements the auditing plugin
 type AuditingPlugin struct {
-	config map[string]interface{}
-	logger *zap.Logger
+	config  map[string]interface{}
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -340,10 +372,12 @@ func (p *AuditingPlugin) Name() string {
 	return "auditing"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *AuditingPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *AuditingPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 
@@ -359,8 +393,10 @@ func (p *AuditingPlugin) Stop() error {
 
 // ELKPlugin implements the ELK/EFK observability plugin
 type ELKPlugin struct {
-	config map[string]interface{}
-	logger *zap.Logger
+	config  map[string]interface{}
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // Name returns the name of the plugin
@@ -368,10 +404,12 @@ func (p *ELKPlugin) Name() string {
 	return "elk"
 }
 
-// Initialize initializes the plugin with the given configuration and logger
-func (p *ELKPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
-	p.config = config
+// Initialize initializes the plugin with the given configuration, logger, and metrics
+func (p *ELKPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
+	p.config = settings
 	p.logger = logger
+	p.metrics = metrics
+	p.cfg = cfg
 	return nil
 }
 

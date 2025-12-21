@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/axiomod/axiomod/framework/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,7 +37,7 @@ p, bob, data2, write
 	err = os.WriteFile(policyPath, []byte(policyContent), 0644)
 	assert.NoError(t, err)
 
-	cfg := CasbinConfig{
+	cfg := config.CasbinConfig{
 		ModelPath:  modelPath,
 		PolicyPath: policyPath,
 	}

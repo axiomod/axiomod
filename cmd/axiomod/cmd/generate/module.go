@@ -402,14 +402,9 @@ func registerHooks(lc fx.Lifecycle, logger *zap.Logger, handler *http.{{.Handler
 }
 `
 
-// NewGenerateModuleCmd returns the generate module command.
-func NewGenerateModuleCmd() *cobra.Command {
+func init() {
 	generateModuleCmd.Flags().StringP("name", "n", "", "Name of the module (required)")
 	generateModuleCmd.MarkFlagRequired("name")
-	return generateModuleCmd
-}
-
-func init() {
 	// Add subcommands to the parent generateCmd
 	generateCmd.AddCommand(generateModuleCmd)
 }

@@ -100,6 +100,50 @@ Rollback the last applied migration.
 axiomod migrate down
 ```
 
+### `force`
+
+Force the migration version (useful for fixing dirty states).
+
+```bash
+axiomod migrate force 20230101000000
+```
+
+### `version`
+
+Print the current migration version.
+
+```bash
+axiomod migrate version
+```
+
+## Policy Management (`policy`)
+
+Manage Casbin RBAC policies and roles.
+
+### `list`
+
+List all current policies.
+
+```bash
+axiomod policy list
+```
+
+### `add`
+
+Add a new policy rule.
+
+```bash
+axiomod policy add --ptype=p --v0=role:admin --v1=resource --v2=action
+```
+
+### `remove`
+
+Remove an existing policy rule.
+
+```bash
+axiomod policy remove --ptype=p --v0=role:admin --v1=resource --v2=action
+```
+
 ## Development Workflow
 
 ### `build`

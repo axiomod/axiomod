@@ -15,6 +15,7 @@ import (
 	"github.com/axiomod/axiomod/cmd/axiomod/cmd/generate"
 	"github.com/axiomod/axiomod/cmd/axiomod/cmd/migrate"
 	"github.com/axiomod/axiomod/cmd/axiomod/cmd/plugin"
+	"github.com/axiomod/axiomod/cmd/axiomod/cmd/policy"
 	"github.com/axiomod/axiomod/cmd/axiomod/cmd/validator"
 )
 
@@ -78,6 +79,7 @@ func init() {
 	rootCmd.AddCommand(core.NewLogsCmd())
 	rootCmd.AddCommand(core.NewHealthcheckCmd())
 	rootCmd.AddCommand(plugin.NewPluginCmd()) // Parent plugin command
+	rootCmd.AddCommand(policy.NewPolicyCmd()) // Parent policy command
 	rootCmd.AddCommand(core.NewInteractiveCmd())
 	rootCmd.AddCommand(core.NewVersionCmd())
 	rootCmd.AddCommand(validator.NewValidatorCmd()) // Parent validator command

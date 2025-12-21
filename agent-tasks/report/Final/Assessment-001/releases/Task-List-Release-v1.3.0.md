@@ -44,19 +44,19 @@
 
 **Acceptance Criteria:**
 
-- [ ] `/metrics` endpoint is exposed on the configured port.
+- [x] `/metrics` endpoint is exposed on the configured port.
 
-- [ ] HTTP request metrics are recorded (count, duration, status).
+- [x] HTTP request metrics are recorded (count, duration, status).
 
-- [ ] gRPC request metrics are recorded.
+- [x] gRPC request metrics are recorded.
 
-- [ ] Metrics are queryable by Prometheus.
+- [x] Metrics are queryable by Prometheus.
 
-- [ ] Unit tests verify metric recording.
+- [x] Unit tests verify metric recording.
 
-- [ ] Integration test with Prometheus scraping.
+- [x] Integration test with Prometheus scraping.
 
-- [ ] Performance test shows <5% overhead.
+- [x] Performance test shows <5% overhead.
 
 **Test Plan:**
 
@@ -83,7 +83,6 @@
 - **NEW:** Prometheus metrics endpoint is now exposed at `/metrics`. HTTP and gRPC requests are automatically instrumented.
 - **NEW:** Custom application metrics can be easily registered and recorded.
 ```
-
 
 ---
 
@@ -131,21 +130,21 @@
 
 **Acceptance Criteria:**
 
-- [ ] Jaeger exporter is functional.
+- [x] Jaeger exporter is functional.
 
-- [ ] OTLP exporter is functional.
+- [x] OTLP exporter is functional.
 
-- [ ] HTTP requests generate spans.
+- [x] HTTP requests generate spans.
 
-- [ ] gRPC requests generate spans.
+- [x] gRPC requests generate spans.
 
-- [ ] Trace context is propagated.
+- [x] Trace context is propagated.
 
-- [ ] Unit tests verify span creation.
+- [x] Unit tests verify span creation.
 
-- [ ] Integration test with Jaeger.
+- [x] Integration test with Jaeger.
 
-- [ ] Performance test shows <10% overhead with sampling.
+- [x] Performance test shows <10% overhead with sampling.
 
 **Test Plan:**
 
@@ -172,7 +171,6 @@
 - **NEW:** Distributed tracing via Jaeger or OTLP. Configure `observability.tracingExporterType` and `observability.tracingExporterURL` in your config.
 - **NEW:** Trace context is automatically propagated across services.
 ```
-
 
 ---
 
@@ -212,19 +210,19 @@
 
 **Acceptance Criteria:**
 
-- [ ] `/live` endpoint returns 200 if the service is running.
+- [x] `/live` endpoint returns 200 if the service is running.
 
-- [ ] `/ready` endpoint returns 200 if all dependencies are healthy.
+- [x] `/ready` endpoint returns 200 if all dependencies are healthy.
 
-- [ ] Database connectivity is checked in readiness.
+- [x] Database connectivity is checked in readiness.
 
-- [ ] Kafka connectivity is checked in readiness (if enabled).
+- [x] Kafka connectivity is checked in readiness (if enabled).
 
-- [ ] Custom readiness hooks can be registered.
+- [x] Custom readiness hooks can be registered.
 
-- [ ] Unit tests verify endpoint behavior.
+- [x] Unit tests verify endpoint behavior.
 
-- [ ] Integration test with dependencies.
+- [x] Integration test with dependencies.
 
 **Test Plan:**
 
@@ -247,8 +245,6 @@
 - **NEW:** Health check endpoints `/live` and `/ready` are now available for Kubernetes probes.
 - **NEW:** Custom health checks can be registered for application-specific dependencies.
 ```
-
-
 
 ---
 
@@ -286,15 +282,15 @@
 
 **Acceptance Criteria:**
 
-- [ ] Discovery results are cached with configurable TTL (default 1 hour).
+- [x] Discovery results are cached with configurable TTL (default 1 hour).
 
-- [ ] Cache is automatically refreshed when expired.
+- [x] Cache is automatically refreshed when expired.
 
-- [ ] Manual refresh is available via API.
+- [x] Manual refresh is available via API.
 
-- [ ] Error handling for discovery failures.
+- [x] Error handling for discovery failures.
 
-- [ ] Unit tests verify caching behavior.
+- [x] Unit tests verify caching behavior.
 
 **Test Plan:**
 
@@ -335,8 +331,6 @@
 
 - Support for read/write splitting (configuration only, not implementation).
 
-
-
 *Out:*
 
 - Full ORM implementation (future task).
@@ -351,15 +345,15 @@
 
 **Acceptance Criteria:**
 
-- [ ] Connection pool settings are configurable.
+- [x] Connection pool settings are configurable.
 
-- [ ] Slow queries are logged.
+- [x] Slow queries are logged.
 
-- [ ] Query duration metrics are recorded.
+- [x] Query duration metrics are recorded.
 
-- [ ] Unit tests verify configuration.
+- [x] Unit tests verify configuration.
 
-- [ ] Integration test with real database.
+- [x] Integration test with real database.
 
 **Test Plan:**
 
@@ -379,7 +373,6 @@
 ## Data Layer
 - **IMPROVED:** Database plugins now support connection pool configuration and slow query logging.
 ```
-
 
 ---
 
@@ -417,15 +410,15 @@
 
 **Acceptance Criteria:**
 
-- [ ] `axiomod migrate create` generates migration files.
+- [x] `axiomod migrate create` generates migration files.
 
-- [ ] `axiomod migrate up` applies pending migrations.
+- [x] `axiomod migrate up` applies pending migrations.
 
-- [ ] `axiomod migrate down` rolls back the last migration.
+- [x] `axiomod migrate down` rolls back the last migration.
 
-- [ ] Migration status can be queried.
+- [x] Migration status can be queried.
 
-- [ ] Unit tests verify command behavior.
+- [x] Unit tests verify command behavior.
 
 **Test Plan:**
 
@@ -486,17 +479,17 @@
 
 **Acceptance Criteria:**
 
-- [ ] Kafka producer is provided via DI.
+- [x] Kafka producer is provided via DI.
 
-- [ ] Kafka consumer is provided via DI.
+- [x] Kafka consumer is provided via DI.
 
-- [ ] Consumer handlers are registered via DI.
+- [x] Consumer handlers are registered via DI.
 
-- [ ] Graceful shutdown works for consumers.
+- [x] Graceful shutdown works for consumers.
 
-- [ ] Unit tests verify DI wiring.
+- [x] Unit tests verify DI wiring.
 
-- [ ] Integration test with real Kafka broker.
+- [x] Integration test with real Kafka broker.
 
 **Test Plan:**
 
@@ -516,7 +509,6 @@
 ## Messaging
 - **IMPROVED:** Kafka producers and consumers are now integrated with dependency injection for easier configuration.
 ```
-
 
 ---
 
@@ -552,15 +544,15 @@
 
 **Acceptance Criteria:**
 
-- [ ] Worker pool is provided via DI.
+- [x] Worker pool is provided via DI.
 
-- [ ] Jobs are registered via DI.
+- [x] Jobs are registered via DI.
 
-- [ ] Graceful shutdown works for workers.
+- [x] Graceful shutdown works for workers.
 
-- [ ] Job scheduling is supported.
+- [x] Job scheduling is supported.
 
-- [ ] Unit tests verify DI wiring.
+- [x] Unit tests verify DI wiring.
 
 **Test Plan:**
 
@@ -580,7 +572,6 @@
 ## Background Jobs
 - **IMPROVED:** Worker pools are now integrated with dependency injection for easier configuration.
 ```
-
 
 ---
 
@@ -618,17 +609,17 @@
 
 **Acceptance Criteria:**
 
-- [ ] CLI binary includes all commands.
+- [x] CLI binary includes all commands.
 
-- [ ] Flags are recognized correctly.
+- [x] Flags are recognized correctly.
 
-- [ ] `axiomod generate module --name=foo` works.
+- [x] `axiomod generate module --name=foo` works.
 
-- [ ] `axiomod migrate create` works.
+- [x] `axiomod migrate create` works.
 
-- [ ] `axiomod validator run` works.
+- [x] `axiomod validator run` works.
 
-- [ ] Automated tests pass.
+- [x] Automated tests pass.
 
 **Test Plan:**
 
@@ -646,7 +637,6 @@
 ## CLI
 - **FIXED:** CLI commands now recognize all flags correctly. Rebuild your binary with `make build-cli`.
 ```
-
 
 ---
 
@@ -682,15 +672,15 @@
 
 **Acceptance Criteria:**
 
-- [ ] `generate module` creates all necessary directories.
+- [x] `generate module` creates all necessary directories.
 
-- [ ] `generate service` creates service skeleton.
+- [x] `generate service` creates service skeleton.
 
-- [ ] `generate handler` creates handler skeleton.
+- [x] `generate handler` creates handler skeleton.
 
-- [ ] Generated code compiles and follows conventions.
+- [x] Generated code compiles and follows conventions.
 
-- [ ] Unit tests verify code generation.
+- [x] Unit tests verify code generation.
 
 **Test Plan:**
 
@@ -708,4 +698,3 @@
 ## CLI
 - **IMPROVED:** Code generation now creates complete Clean Architecture slices with all necessary files and directories.
 ```
-

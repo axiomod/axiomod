@@ -7,7 +7,6 @@ import (
 	"github.com/axiomod/axiomod/platform/observability"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 )
 
 type mockPlugin struct {
@@ -18,7 +17,7 @@ type mockPlugin struct {
 }
 
 func (m *mockPlugin) Name() string { return m.name }
-func (m *mockPlugin) Initialize(config map[string]interface{}, logger *zap.Logger) error {
+func (m *mockPlugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error {
 	m.initialized = true
 	return nil
 }
@@ -47,7 +46,8 @@ func TestPluginRegistry(t *testing.T) {
 	logger, _ := observability.NewLogger(obsCfg)
 
 	t.Run("Register and Lifecycle", func(t *testing.T) {
-		registry, err := NewPluginRegistry(cfg, logger)
+		metrics, _ := observability.NewMetrics(obsCfg, logger)
+		registry, err := NewPluginRegistry(cfg, logger, metrics)
 		assert.NoError(t, err)
 
 		mock := &mockPlugin{name: "mock"}
@@ -74,7 +74,8 @@ func TestPluginRegistry(t *testing.T) {
 	})
 
 	t.Run("Get Plugin", func(t *testing.T) {
-		registry, _ := NewPluginRegistry(cfg, logger)
+		metrics, _ := observability.NewMetrics(obsCfg, logger)
+		registry, _ := NewPluginRegistry(cfg, logger, metrics)
 		mock := &mockPlugin{name: "mock-2"}
 		registry.Register(mock)
 

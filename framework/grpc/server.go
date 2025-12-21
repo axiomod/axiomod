@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/errors"
 	"github.com/axiomod/axiomod/platform/observability"
 
@@ -15,6 +16,7 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -25,6 +27,26 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
+
+// Module provides the fx options for the grpc module
+var Module = fx.Options(
+	fx.Provide(NewServer),
+	fx.Provide(NewServerOptions),
+	fx.Provide(NewMetricsInterceptor),
+	fx.Provide(NewTracingInterceptor),
+)
+
+// NewServerOptions creates default server options from config
+func NewServerOptions(cfg *config.Config) *ServerOptions {
+	return &ServerOptions{
+		Host: cfg.GRPC.Host,
+		Port: cfg.GRPC.Port,
+		// Other fields can be mapped here as needed
+		MaxConnectionAge:  time.Hour,
+		MaxConnectionIdle: time.Minute * 15,
+		Timeout:           time.Second * 30,
+	}
+}
 
 // Server represents a gRPC server
 type Server struct {
@@ -59,7 +81,7 @@ func DefaultServerOptions() *ServerOptions {
 }
 
 // NewServer creates a new gRPC server
-func NewServer(logger *observability.Logger, options *ServerOptions) (*Server, error) {
+func NewServer(logger *observability.Logger, options *ServerOptions, metricsInterceptor *MetricsInterceptor, tracingInterceptor *TracingInterceptor) (*Server, error) {
 	if options == nil {
 		options = DefaultServerOptions()
 	}
@@ -82,6 +104,8 @@ func NewServer(logger *observability.Logger, options *ServerOptions) (*Server, e
 			grpc_recovery.UnaryServerInterceptor(
 				grpc_recovery.WithRecoveryHandler(recoveryHandler(logger)),
 			),
+			metricsInterceptor.Unary(),
+			tracingInterceptor.Unary(),
 			timeoutInterceptor(options.Timeout),
 		),
 	))

@@ -103,6 +103,8 @@ export METRICS_PORT=9100
 
 ### Usage
 
+The metrics endpoint is automatically exposed at `/metrics` on the main application port.
+
 The metrics registry is injected into components through dependency injection:
 
 ```go
@@ -154,6 +156,7 @@ Follow these conventions for metric names:
 - Include units in the name if applicable
 
 Examples:
+
 - `http_requests_total`
 - `database_connections_active`
 - `request_duration_seconds`
@@ -261,8 +264,8 @@ Health checks are enabled by default and can be accessed at the `/health` endpoi
 
 The framework provides two types of health checks:
 
-- **Liveness**: Indicates if the application is running
-- **Readiness**: Indicates if the application is ready to accept requests
+- **Liveness** (`/live`): Indicates if the application process is running. Kubernetes liveness probes should target this.
+- **Readiness** (`/ready`): Indicates if the application is ready to accept requests (e.g., database is connected). Kubernetes readiness probes should target this.
 
 ### Custom Health Checks
 

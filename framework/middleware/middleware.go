@@ -8,7 +8,19 @@ import (
 	"github.com/axiomod/axiomod/platform/observability"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/fx"
 	"go.uber.org/zap"
+)
+
+// Module provides the fx options for the middleware module
+var Module = fx.Options(
+	fx.Provide(NewLoggingMiddleware),
+	fx.Provide(NewAuthMiddleware),
+	fx.Provide(NewRoleMiddleware),
+	fx.Provide(NewTimeoutMiddleware),
+	fx.Provide(NewRecoveryMiddleware),
+	fx.Provide(NewMetricsMiddleware),
+	fx.Provide(NewTracingMiddleware),
 )
 
 // LoggingMiddleware logs HTTP requests

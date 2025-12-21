@@ -9,7 +9,13 @@ import (
 
 	"github.com/axiomod/axiomod/platform/observability"
 
+	"go.uber.org/fx"
 	"go.uber.org/zap"
+)
+
+// Module provides the fx options for the health module
+var Module = fx.Options(
+	fx.Provide(New),
 )
 
 // Status represents the health status of a component

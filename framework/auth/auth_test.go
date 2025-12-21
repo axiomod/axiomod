@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/platform/observability"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,7 +69,8 @@ func TestOIDCService(t *testing.T) {
 		IssuerURL: "https://example.com/auth/realms/master",
 		ClientID:  "test-client",
 	}
-	service := NewOIDCService(cfg)
+	logger, _ := observability.NewLogger(&config.Config{})
+	service := NewOIDCService(cfg, logger)
 
 	t.Run("NewOIDCService", func(t *testing.T) {
 		assert.NotNil(t, service)
@@ -116,7 +119,8 @@ func TestOIDCService(t *testing.T) {
 			IssuerURL: server.URL,
 			ClientID:  "mock-client",
 		}
-		mockService := NewOIDCService(mockCfg)
+		logger, _ := observability.NewLogger(&config.Config{})
+		mockService := NewOIDCService(mockCfg, logger)
 
 		err := mockService.Discover(context.Background())
 		// It will still fail on JWKS initialization because MicahParks/keyfunc tries to fetch the JWKS URL

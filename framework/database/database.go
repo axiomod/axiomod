@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/platform/observability"
 
 	"go.uber.org/zap"
@@ -16,15 +17,19 @@ type TransactionFunc func(ctx context.Context, tx *sql.Tx) error
 
 // DB is a wrapper around sql.DB with transaction support
 type DB struct {
-	db     *sql.DB
-	logger *observability.Logger
+	db      *sql.DB
+	logger  *observability.Logger
+	metrics *observability.Metrics
+	cfg     *config.Config
 }
 
 // New creates a new DB instance
-func New(db *sql.DB, logger *observability.Logger) *DB {
+func New(db *sql.DB, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) *DB {
 	return &DB{
-		db:     db,
-		logger: logger,
+		db:      db,
+		logger:  logger,
+		metrics: metrics,
+		cfg:     cfg,
 	}
 }
 
@@ -57,18 +62,33 @@ func (d *DB) WithTransaction(ctx context.Context, fn TransactionFunc) error {
 }
 
 // Connect establishes a connection to the database
-func Connect(driverName, dataSourceName string, maxOpenConns, maxIdleConns int, connMaxLifetime time.Duration, logger *observability.Logger) (*DB, error) {
+func Connect(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics) (*DB, error) {
+	dbCfg := cfg.Database
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.Name, dbCfg.SSLMode)
+
 	// Open a connection to the database
-	db, err := sql.Open(driverName, dataSourceName)
+	db, err := sql.Open(dbCfg.Driver, dsn)
 	if err != nil {
 		logger.Error("Failed to open database connection", zap.Error(err))
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
+	// Set default pool settings if not provided
+	if dbCfg.MaxOpenConns == 0 {
+		dbCfg.MaxOpenConns = 25
+	}
+	if dbCfg.MaxIdleConns == 0 {
+		dbCfg.MaxIdleConns = 25
+	}
+	if dbCfg.ConnMaxLifetime == 0 {
+		dbCfg.ConnMaxLifetime = 5 // 5 minutes
+	}
+
 	// Set connection pool settings
-	db.SetMaxOpenConns(maxOpenConns)
-	db.SetMaxIdleConns(maxIdleConns)
-	db.SetConnMaxLifetime(connMaxLifetime)
+	db.SetMaxOpenConns(dbCfg.MaxOpenConns)
+	db.SetMaxIdleConns(dbCfg.MaxIdleConns)
+	db.SetConnMaxLifetime(time.Duration(dbCfg.ConnMaxLifetime) * time.Minute)
 
 	// Verify the connection
 	if err := db.Ping(); err != nil {
@@ -77,13 +97,13 @@ func Connect(driverName, dataSourceName string, maxOpenConns, maxIdleConns int, 
 	}
 
 	logger.Info("Connected to database",
-		zap.String("driver", driverName),
-		zap.Int("maxOpenConns", maxOpenConns),
-		zap.Int("maxIdleConns", maxIdleConns),
-		zap.Duration("connMaxLifetime", connMaxLifetime),
+		zap.String("driver", dbCfg.Driver),
+		zap.Int("maxOpenConns", dbCfg.MaxOpenConns),
+		zap.Int("maxIdleConns", dbCfg.MaxIdleConns),
+		zap.Int("connMaxLifetimeMin", dbCfg.ConnMaxLifetime),
 	)
 
-	return New(db, logger), nil
+	return New(db, logger, metrics, cfg), nil
 }
 
 // Close closes the database connection
@@ -98,17 +118,56 @@ func (d *DB) Close() error {
 
 // Exec executes a query without returning any rows
 func (d *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	return d.db.ExecContext(ctx, query, args...)
+	start := time.Now()
+	res, err := d.db.ExecContext(ctx, query, args...)
+	d.recordQuery(query, "exec", start, err)
+	return res, err
 }
 
 // Query executes a query that returns rows
 func (d *DB) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	return d.db.QueryContext(ctx, query, args...)
+	start := time.Now()
+	rows, err := d.db.QueryContext(ctx, query, args...)
+	d.recordQuery(query, "query", start, err)
+	return rows, err
 }
 
 // QueryRow executes a query that is expected to return at most one row
 func (d *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	return d.db.QueryRowContext(ctx, query, args...)
+	start := time.Now()
+	row := d.db.QueryRowContext(ctx, query, args...)
+	// Note: We can't easily check for error until Scan is called,
+	// but we record the duration anyway.
+	d.recordQuery(query, "query_row", start, nil)
+	return row
+}
+
+func (d *DB) recordQuery(query, queryType string, start time.Time, err error) {
+	duration := time.Since(start)
+
+	// Record metrics
+	status := "success"
+	if err != nil {
+		status = "error"
+	}
+	if d.metrics != nil && d.metrics.DBQueryDuration != nil {
+		d.metrics.DBQueryDuration.WithLabelValues(queryType, status).Observe(duration.Seconds())
+	}
+
+	// Log slow queries
+	threshold := 200 * time.Millisecond // Default 200ms
+	if d.cfg != nil && d.cfg.Database.SlowQueryThreshold > 0 {
+		threshold = time.Duration(d.cfg.Database.SlowQueryThreshold) * time.Millisecond
+	}
+
+	if duration > threshold {
+		d.logger.Warn("Slow database query detected",
+			zap.String("query", query),
+			zap.String("type", queryType),
+			zap.Duration("duration", duration),
+			zap.Error(err),
+		)
+	}
 }
 
 // GetDB returns the underlying sql.DB instance

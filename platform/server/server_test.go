@@ -7,7 +7,10 @@ import (
 	"time"
 
 	"github.com/axiomod/axiomod/framework/config"
+	"github.com/axiomod/axiomod/framework/health"
+	"github.com/axiomod/axiomod/framework/middleware"
 	"github.com/axiomod/axiomod/platform/observability"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -28,8 +31,13 @@ func TestHTTPServer(t *testing.T) {
 
 	logger, _ := observability.NewLogger(cfg)
 	metrics, _ := observability.NewMetrics(cfg, logger)
+	metricsMid := middleware.NewMetricsMiddleware(metrics)
+	tracingMid := middleware.NewTracingMiddleware(&observability.Tracer{
+		Tracer: trace.NewNoopTracerProvider().Tracer("test"),
+	})
+	h := health.New(logger)
 
-	srv := NewHTTPServer(cfg, logger, metrics)
+	srv := NewHTTPServer(cfg, logger, metrics, metricsMid, tracingMid, h)
 
 	t.Run("Health Endpoints", func(t *testing.T) {
 		// Run server in background for testing probes
@@ -59,7 +67,11 @@ func TestHTTPServer(t *testing.T) {
 				assert.Equal(t, tt.status, resp.StatusCode)
 
 				body, _ := io.ReadAll(resp.Body)
-				assert.JSONEq(t, tt.body, string(body))
+				if tt.name == "Health (Legacy)" {
+					assert.JSONEq(t, tt.body, string(body))
+				} else {
+					assert.Contains(t, string(body), `"status":"UP"`)
+				}
 				resp.Body.Close()
 			})
 		}

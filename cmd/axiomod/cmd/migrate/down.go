@@ -41,18 +41,11 @@ Example:
 		fmt.Printf("Rolling back last %d migration(s)...\n", steps)
 
 		// Load configuration to get DB DSN
-		// TODO: Integrate with centralized config loading
-		dbDSN := os.Getenv("DATABASE_DSN") // Example: Get DSN from env var
-		if dbDSN == "" {
-			// Fallback or load from config file
-			// cfg, err := config.Load("") // Assuming config loading logic
-			// if err != nil {
-			// 	 fmt.Printf("Error loading config: %v\n", err)
-			// 	 os.Exit(1)
-			// }
-			// dbDSN = cfg.Database.DSN
-			dbDSN = "postgres://postgres:postgres@localhost:5432/axiomod?sslmode=disable" // Default for example
-			fmt.Println("Warning: DATABASE_DSN not set, using default DSN.")
+		// Load configuration to get DB DSN
+		dbDSN, err := getDSN()
+		if err != nil {
+			fmt.Printf("Error getting database connection string: %v\n", err)
+			os.Exit(1)
 		}
 
 		// Ensure the database exists (optional, depends on workflow)

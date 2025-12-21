@@ -17,7 +17,8 @@ database:
   sslMode: disable
   maxOpenConns: 25
   maxIdleConns: 5
-  connMaxLifetime: 300  # seconds
+  connMaxLifetime: 300  # minutes (default 5, matches types.go comment)
+  slowQueryThreshold: 200 # milliseconds
 ```
 
 ### Environment Overrides
@@ -94,5 +95,32 @@ Ensure the desired plugin is enabled in your configuration:
 ```yaml
 plugins:
   enabled:
-    - mysql  # or postgres
+
+## 5. Database Migrations
+
+Automate your schema changes with the built-in migration tool using `golang-migrate`.
+
+### Commands
+
+```bash
+# Create a new migration pair (up/down)
+axiomod migrate create add_users_table
+
+# Apply all pending migrations
+axiomod migrate up
+
+# Roll back the last migration step
+axiomod migrate down
+
+# Force a specific version (useful for dirty states)
+axiomod migrate force 20231010120000
+
+# check current version 
+axiomod migrate version
 ```
+
+### Best Practices
+
+- Always test migrations (`up` and `down`) in development.
+- Use descriptive names for your migration files.
+- Backup your database before running migrations in production.

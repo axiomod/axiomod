@@ -28,9 +28,11 @@ Example:
 		fmt.Printf("Generating domain service: %s\n", name)
 
 		// Define paths (assuming it belongs to an existing module)
-		// TODO: Add flag to specify module or improve discovery
-		moduleName := name // Assuming service name matches module for simplicity
-		modulePath := filepath.Join("internal", "examples", moduleName)
+		moduleName, _ := cmd.Flags().GetString("module")
+		if moduleName == "" {
+			moduleName = name // Default to service name if module not specified
+		}
+		modulePath := filepath.Join("examples", moduleName)
 		servicePath := filepath.Join(modulePath, "service")
 		repositoryPath := filepath.Join(modulePath, "repository")
 
@@ -129,14 +131,10 @@ type {{.RepositoryName}} interface {
 	},
 }
 
-// NewGenerateServiceCmd returns the generate service command.
-func NewGenerateServiceCmd() *cobra.Command {
-	generateServiceCmd.Flags().StringP("name", "n", "", "Name of the service (required)")
-	generateServiceCmd.MarkFlagRequired("name")
-	return generateServiceCmd
-}
-
 func init() {
+	generateServiceCmd.Flags().StringP("name", "n", "", "Name of the service (required)")
+	generateServiceCmd.Flags().StringP("module", "m", "", "Target module name (optional, defaults to service name)")
+	generateServiceCmd.MarkFlagRequired("name")
 	// Add subcommands to the parent generateCmd
 	generateCmd.AddCommand(generateServiceCmd)
 }

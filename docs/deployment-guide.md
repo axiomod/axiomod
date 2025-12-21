@@ -214,7 +214,6 @@ spec:
         ports:
         - containerPort: 8080
         - containerPort: 9090
-        - containerPort: 9100
         env:
         - name: APP_ENV
           value: production
@@ -231,13 +230,13 @@ spec:
             memory: "256Mi"
         readinessProbe:
           httpGet:
-            path: /health
+            path: /ready
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /health
+            path: /live
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 20
@@ -259,9 +258,6 @@ spec:
   - name: grpc
     port: 9090
     targetPort: 9090
-  - name: metrics
-    port: 9100
-    targetPort: 9100
   type: ClusterIP
 ```
 

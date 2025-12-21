@@ -29,7 +29,11 @@ Example:
 		fmt.Printf("Generating HTTP handler: %s\n", name)
 
 		// Define paths
-		modulePath := filepath.Join("internal", "examples", name)
+		moduleName, _ := cmd.Flags().GetString("module")
+		if moduleName == "" {
+			moduleName = name // Default to name if module not specified
+		}
+		modulePath := filepath.Join("examples", moduleName)
 		handlerPath := filepath.Join(modulePath, "delivery", "http")
 		servicePath := filepath.Join(modulePath, "service")
 		entityPath := filepath.Join(modulePath, "entity")
@@ -209,14 +213,10 @@ func generateFile(tmplContent, filePath string, data interface{}) {
 	fmt.Printf("Generated file: %s\n", filePath)
 }
 
-// NewGenerateHandlerCmd returns the generate handler command.
-func NewGenerateHandlerCmd() *cobra.Command {
-	generateHandlerCmd.Flags().StringP("name", "n", "", "Name of the handler (required)")
-	generateHandlerCmd.MarkFlagRequired("name")
-	return generateHandlerCmd
-}
-
 func init() {
+	generateHandlerCmd.Flags().StringP("name", "n", "", "Name of the handler (required)")
+	generateHandlerCmd.Flags().StringP("module", "m", "", "Target module name (optional, defaults to handler name)")
+	generateHandlerCmd.MarkFlagRequired("name")
 	// Add subcommands to the parent generateCmd
 	generateCmd.AddCommand(generateHandlerCmd)
 }

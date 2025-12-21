@@ -63,19 +63,13 @@ func RegisterKafkaHandlers(consumer *kafka.Consumer) {
 
 ### Starting the Consumer
 
-The consumer runs in its own goroutine and can be started within the Fx lifecycle.
+The `kafka` module automatically manages the lifecycle of the consumer. Just include `kafka.Module` in your Fx application options and ensure your configuration is correct.
 
 ```go
-func StartConsumer(lc fx.Lifecycle, consumer *kafka.Consumer) {
-    lc.Append(fx.Hook{
-        OnStart: func(ctx context.Context) error {
-            return consumer.Start(ctx)
-        },
-        OnStop: func(ctx context.Context) error {
-            return consumer.Close()
-        },
-    })
-}
+fx.New(
+    kafka.Module,
+    // ...
+)
 ```
 
 ## 4. Message Structure

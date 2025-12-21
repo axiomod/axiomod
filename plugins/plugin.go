@@ -15,6 +15,7 @@ import (
 // Module provides the fx options for the plugins module
 var Module = fx.Options(
 	fx.Provide(NewPluginRegistry),
+	fx.Provide(func(r *PluginRegistry) *PluginRegistry { return r }), // For simpler injection if needed
 	fx.Invoke(RegisterPlugins),
 )
 
@@ -35,8 +36,8 @@ type Plugin interface {
 	// Name returns the name of the plugin
 	Name() string
 
-	// Initialize initializes the plugin with the given configuration and logger
-	Initialize(config map[string]interface{}, logger *zap.Logger) error
+	// Initialize initializes the plugin with the given configuration, logger, and metrics
+	Initialize(config map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config) error
 
 	// Start starts the plugin
 	Start() error
@@ -50,15 +51,17 @@ type PluginRegistry struct {
 	plugins map[string]Plugin
 	config  *config.Config
 	logger  *observability.Logger
+	metrics *observability.Metrics
 	mu      sync.RWMutex
 }
 
 // NewPluginRegistry creates a new plugin registry
-func NewPluginRegistry(cfg *config.Config, logger *observability.Logger) (*PluginRegistry, error) {
+func NewPluginRegistry(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics) (*PluginRegistry, error) {
 	registry := &PluginRegistry{
 		plugins: make(map[string]Plugin),
 		config:  cfg,
 		logger:  logger,
+		metrics: metrics,
 	}
 
 	// Register built-in plugins
@@ -136,7 +139,7 @@ func (r *PluginRegistry) initializeEnabledPlugins() error {
 		}
 
 		// Initialize plugin
-		if err := plugin.Initialize(pluginSettings, r.logger.Logger); err != nil {
+		if err := plugin.Initialize(pluginSettings, r.logger, r.metrics, r.config); err != nil {
 			return fmt.Errorf("failed to initialize plugin %s: %w", name, err)
 		}
 

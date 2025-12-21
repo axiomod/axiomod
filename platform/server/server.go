@@ -3,12 +3,15 @@ package server
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"time"
 
 	"github.com/axiomod/axiomod/framework/config"
+	grpc_pkg "github.com/axiomod/axiomod/framework/grpc"
+	"github.com/axiomod/axiomod/framework/health"
+	"github.com/axiomod/axiomod/framework/middleware"
 	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/gofiber/adaptor/v2"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -17,14 +20,11 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 // Module provides the fx options for the server module
 var Module = fx.Options(
 	fx.Provide(NewHTTPServer),
-	fx.Provide(NewGRPCServer),
 )
 
 // HTTPServer represents the HTTP server
@@ -35,7 +35,7 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer creates a new HTTP server
-func NewHTTPServer(cfg *config.Config, obsLogger *observability.Logger, metrics *observability.Metrics) *HTTPServer {
+func NewHTTPServer(cfg *config.Config, obsLogger *observability.Logger, metrics *observability.Metrics, metricsMid *middleware.MetricsMiddleware, tracingMid *middleware.TracingMiddleware, h *health.Health) *HTTPServer {
 	// Create a new Fiber app
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  time.Duration(cfg.HTTP.ReadTimeout) * time.Second,
@@ -52,16 +52,17 @@ func NewHTTPServer(cfg *config.Config, obsLogger *observability.Logger, metrics 
 		Format: "[${time}] ${status} - ${latency} ${method} ${path}\n",
 	}))
 
+	// Add metrics middleware
+	app.Use(metricsMid.Handle())
+
+	// Add tracing middleware
+	app.Use(tracingMid.Handle())
+
 	// Add health check endpoint (liveness)
-	app.Get("/live", func(c *fiber.Ctx) error {
-		return c.JSON(map[string]string{"status": "alive"})
-	})
+	app.Get("/live", adaptor.HTTPHandlerFunc(h.Handler()))
 
 	// Add readiness probe
-	app.Get("/ready", func(c *fiber.Ctx) error {
-		// In a real app, this should check DB connections, etc.
-		return c.JSON(map[string]string{"status": "ready"})
-	})
+	app.Get("/ready", adaptor.HTTPHandlerFunc(h.Handler()))
 
 	// Add legacy health check for backward compatibility
 	app.Get("/health", func(c *fiber.Ctx) error {
@@ -69,11 +70,7 @@ func NewHTTPServer(cfg *config.Config, obsLogger *observability.Logger, metrics 
 	})
 
 	// Add metrics endpoint
-	app.Get("/metrics", func(c *fiber.Ctx) error {
-		// Create a handler that will serve the metrics
-		return c.SendStatus(fiber.StatusOK)
-		// Note: In a real implementation, we would need to properly adapt the http.Handler to fiber
-	})
+	app.Get("/metrics", adaptor.HTTPHandler(metrics.Handler))
 
 	return &HTTPServer{
 		App:    app,
@@ -103,52 +100,19 @@ func RegisterHTTPServer(lc fx.Lifecycle, server *HTTPServer) {
 	})
 }
 
-// GRPCServer represents the gRPC server
-type GRPCServer struct {
-	Server *grpc.Server
-	Config *config.Config
-	Logger *observability.Logger
-}
-
-// NewGRPCServer creates a new gRPC server
-func NewGRPCServer(cfg *config.Config, logger *observability.Logger) *GRPCServer {
-	// Create a new gRPC server
-	server := grpc.NewServer()
-
-	// Enable reflection for development
-	if cfg.App.Debug {
-		reflection.Register(server)
-	}
-
-	return &GRPCServer{
-		Server: server,
-		Config: cfg,
-		Logger: logger,
-	}
-}
-
 // RegisterGRPCServer registers the gRPC server with the fx lifecycle
-func RegisterGRPCServer(lc fx.Lifecycle, server *GRPCServer) {
+func RegisterGRPCServer(lc fx.Lifecycle, server *grpc_pkg.Server) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			// Start the server in a goroutine
 			go func() {
-				addr := fmt.Sprintf("%s:%d", server.Config.GRPC.Host, server.Config.GRPC.Port)
-				server.Logger.Info("Starting gRPC server", zap.String("address", addr))
-				lis, err := net.Listen("tcp", addr)
-				if err != nil {
-					server.Logger.Error("Failed to listen", zap.Error(err))
-					return
-				}
-				if err := server.Server.Serve(lis); err != nil {
-					server.Logger.Error("Failed to start gRPC server", zap.Error(err))
+				if err := server.Start(); err != nil && err != http.ErrServerClosed {
+					// logger is internal to server
 				}
 			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			server.Logger.Info("Stopping gRPC server")
-			server.Server.GracefulStop()
+			server.Stop()
 			return nil
 		},
 	})

@@ -49,23 +49,29 @@ type AppConfig struct {
 
 // ObservabilityConfig represents the observability configuration
 type ObservabilityConfig struct {
-	LogLevel       string
-	LogFormat      string
-	TracingEnabled bool
-	TracingURL     string
-	MetricsEnabled bool
-	MetricsPort    int
+	LogLevel            string
+	LogFormat           string
+	TracingEnabled      bool
+	TracingExporterType string // "otlp", "jaeger", "stdout"
+	TracingURL          string
+	TracingSamplerRatio float64
+	MetricsEnabled      bool
+	MetricsPort         int
 }
 
 // DatabaseConfig represents the database configuration
 type DatabaseConfig struct {
-	Driver   string
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Name     string
-	SSLMode  string
+	Driver             string
+	Host               string
+	Port               int
+	User               string
+	Password           string
+	Name               string
+	SSLMode            string
+	MaxOpenConns       int
+	MaxIdleConns       int
+	ConnMaxLifetime    int // in minutes
+	SlowQueryThreshold int // in milliseconds
 }
 
 // HTTPConfig represents the HTTP server configuration

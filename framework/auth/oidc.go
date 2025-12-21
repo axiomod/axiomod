@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
+	"github.com/axiomod/axiomod/platform/observability"
 	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 )
 
 // OIDCConfig represents the configuration for the OIDC service
@@ -33,20 +35,58 @@ type OIDCDiscovery struct {
 
 // OIDCService provides OIDC discovery and token verification
 type OIDCService struct {
-	config    OIDCConfig
-	discovery *OIDCDiscovery
-	jwks      keyfunc.Keyfunc
-	mu        sync.RWMutex
+	config        OIDCConfig
+	discovery     *OIDCDiscovery
+	jwks          keyfunc.Keyfunc
+	mu            sync.RWMutex
+	ctx           context.Context
+	cancel        context.CancelFunc
+	logger        *observability.Logger
+	lastDiscovery time.Time
 }
 
 // NewOIDCService creates a new OIDCService
-func NewOIDCService(cfg OIDCConfig) *OIDCService {
+func NewOIDCService(cfg OIDCConfig, logger *observability.Logger) *OIDCService {
 	if cfg.JWKSCacheTTL == 0 {
 		cfg.JWKSCacheTTL = 1 * time.Hour
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 	return &OIDCService{
 		config: cfg,
+		ctx:    ctx,
+		cancel: cancel,
+		logger: logger,
 	}
+}
+
+// Start initiates the background refresh of discovery and JWKS
+func (s *OIDCService) Start() {
+	// Initial discovery
+	if err := s.Discover(s.ctx); err != nil {
+		s.logger.Error("Initial OIDC discovery failed", zap.Error(err))
+	}
+
+	// Start background refresh ticker
+	go func() {
+		ticker := time.NewTicker(s.config.JWKSCacheTTL)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				if err := s.Discover(s.ctx); err != nil {
+					s.logger.Error("Background OIDC discovery failed", zap.Error(err))
+				}
+			case <-s.ctx.Done():
+				return
+			}
+		}
+	}()
+}
+
+// Stop stops the background refresh
+func (s *OIDCService) Stop() {
+	s.cancel()
 }
 
 // Discover performs OIDC discovery and initializes JWKS
@@ -83,6 +123,7 @@ func (s *OIDCService) Discover(ctx context.Context) error {
 	s.mu.Lock()
 	s.discovery = &discovery
 	s.jwks = kf
+	s.lastDiscovery = time.Now()
 	s.mu.Unlock()
 
 	return nil
@@ -97,12 +138,21 @@ func (s *OIDCService) VerifyToken(ctx context.Context, tokenString string) (*Cla
 
 	if jwks == nil {
 		if err := s.Discover(ctx); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("OIDC discovery failed and no cached JWKS: %w", err)
 		}
 		s.mu.RLock()
 		discovery = s.discovery
 		jwks = s.jwks
 		s.mu.RUnlock()
+	}
+
+	// Check for stale discovery (e.g. older than 2x TTL)
+	s.mu.RLock()
+	lastDisco := s.lastDiscovery
+	s.mu.RUnlock()
+
+	if time.Since(lastDisco) > s.config.JWKSCacheTTL*2 && lastDisco.IsZero() == false {
+		s.logger.Warn("OIDC discovery is stale", zap.Time("last_success", lastDisco))
 	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, jwks.Keyfunc)

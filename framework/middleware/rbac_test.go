@@ -33,7 +33,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 	_ = os.WriteFile(modelPath, []byte(modelContent), 0644)
 	_ = os.WriteFile(policyPath, []byte(policyContent), 0644)
 
-	rbacService, _ := auth.NewRBACService(auth.CasbinConfig{
+	rbacService, _ := auth.NewRBACService(config.CasbinConfig{
 		ModelPath:  modelPath,
 		PolicyPath: policyPath,
 	})
