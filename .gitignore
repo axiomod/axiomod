@@ -62,4 +62,4 @@ tmp/
 
 # Agent
 .agent/
-.agent-tasks/
+agent-tasks/
