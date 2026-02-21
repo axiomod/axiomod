@@ -34,4 +34,5 @@ Welcome to the Axiomod documentation. Here you will find everything you need to 
 
 ## 📝 Release Notes
 
+- [v0.2.0 - Claude Code Integration](./release-notes/v0.2.0.md)
 - [v0.1.0 - Initial Release](./release-notes/v0.1.0.md)
