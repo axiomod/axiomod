@@ -28,9 +28,10 @@ Welcome to the Axiomod documentation. Here you will find everything you need to 
 - **[Architecture Decision Records](./decision-records/)**: History of major architectural decisions.
 - **[Roadmap](./roadmap.md)**: Future plans and enhancement initiatives.
 
+## 🤖 Contributing & Tooling
+
+- **[Claude Code Guide](./claude-code-guide.md)**: How the `.claude/` directory configures Claude Code for this project. Covers rules, agents, skills, settings, and how to extend them.
+
 ## 📝 Release Notes
 
-- [v1.4.0 - Enterprise Readiness & Deep Observability](./release-notes/v1.4.0.md)
-- [v1.3.0 - Developer Experience & Observability](./release-notes/v1.3.0.md)
-- [v1.2.0 - Security & Stability Hardening](./release-notes/v1.2.0.md)
-- [v1.0.0 - Initial Release](./release-notes/v1.0.0.md)
+- [v0.1.0 - Initial Release](./release-notes/v0.1.0.md)
