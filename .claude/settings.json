@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(go test:*)",
+      "Bash(go build:*)",
+      "Bash(go vet:*)",
+      "Bash(go fmt:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go mod download:*)",
+      "Bash(golangci-lint:*)",
+      "Bash(axiomod generate:*)",
+      "Bash(axiomod validator:*)",
+      "Bash(axiomod init:*)",
+      "Bash(axiomod migrate:*)",
+      "Bash(axiomod plugin:*)",
+      "Bash(axiomod policy:*)",
+      "Bash(axiomod test:*)",
+      "Bash(axiomod lint:*)",
+      "Bash(axiomod fmt:*)",
+      "Bash(axiomod build:*)",
+      "Bash(axiomod version:*)",
+      "Bash(axiomod healthcheck:*)",
+      "Bash(docker build:*)",
+      "Bash(docker compose:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git branch:*)",
+      "Bash(git tag:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)"
+    ],
+    "deny": [
+      "Read(*.env)",
+      "Read(**/service_local.yaml)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Edit(*.env)",
+      "Edit(**/service_local.yaml)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.key)",
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)"
+    ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
+}
