@@ -5,8 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"time"
+
+	"github.com/axiomod/axiomod/framework/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -307,7 +308,7 @@ The project follows a clean architecture approach with the following structure:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-`, strings.Title(projectName), projectName, projectName, projectName, projectName, projectName)
+`, utils.TitleCase(projectName), projectName, projectName, projectName, projectName, projectName)
 
 	err = os.WriteFile("README.md", []byte(readmeContent), 0644)
 	if err != nil {
@@ -408,7 +409,7 @@ help:
 	@echo "  make lint         - Run linters"
 	@echo "  make fmt          - Format Go code"
 `
-	err = os.WriteFile("Makefile", []byte(fmt.Sprintf(makefileContent, projectName, projectName)), 0644)
+	err = os.WriteFile("Makefile", []byte(fmt.Sprintf(makefileContent, projectName)), 0644)
 	if err != nil {
 		fmt.Printf("Error creating Makefile: %v\n", err)
 		os.Exit(1)

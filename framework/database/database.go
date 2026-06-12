@@ -62,11 +62,24 @@ func (d *DB) WithTransaction(ctx context.Context, fn TransactionFunc) error {
 	return nil
 }
 
+// buildDSN assembles the database connection string. The result contains the
+// plaintext password and must never be logged; use redactedDSN for any
+// diagnostic output.
+func buildDSN(dbCfg config.DatabaseConfig) string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.Name, dbCfg.SSLMode)
+}
+
+// redactedDSN returns a DSN safe for logging, with the password masked.
+func redactedDSN(dbCfg config.DatabaseConfig) string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=**** dbname=%s sslmode=%s",
+		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Name, dbCfg.SSLMode)
+}
+
 // Connect establishes a connection to the database
 func Connect(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics, health *health.Health) (*DB, error) {
 	dbCfg := cfg.Database
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.Name, dbCfg.SSLMode)
+	dsn := buildDSN(dbCfg)
 
 	// Open a connection to the database
 	db, err := sql.Open(dbCfg.Driver, dsn)
@@ -99,6 +112,7 @@ func Connect(cfg *config.Config, logger *observability.Logger, metrics *observab
 
 	logger.Info("Connected to database",
 		zap.String("driver", dbCfg.Driver),
+		zap.String("dsn", redactedDSN(dbCfg)),
 		zap.Int("maxOpenConns", dbCfg.MaxOpenConns),
 		zap.Int("maxIdleConns", dbCfg.MaxIdleConns),
 		zap.Int("connMaxLifetimeMin", dbCfg.ConnMaxLifetime),

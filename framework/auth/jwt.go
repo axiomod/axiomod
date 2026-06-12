@@ -8,11 +8,25 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// MinSecretKeyLength is the minimum length in bytes for an HS256 secret key.
+const MinSecretKeyLength = 32
+
 // Common errors
 var (
-	ErrInvalidToken = errors.New("invalid token")
-	ErrExpiredToken = errors.New("token has expired")
+	ErrInvalidToken  = errors.New("invalid token")
+	ErrExpiredToken  = errors.New("token has expired")
+	ErrWeakSecretKey = fmt.Errorf("JWT secret key must be at least %d bytes", MinSecretKeyLength)
 )
+
+// ValidateSecretKey checks that the secret key meets the minimum strength
+// requirements for HMAC signing. Callers wiring a JWTService from
+// configuration MUST validate the secret before use.
+func ValidateSecretKey(secretKey string) error {
+	if len(secretKey) < MinSecretKeyLength {
+		return ErrWeakSecretKey
+	}
+	return nil
+}
 
 // Claims represents the JWT claims
 type Claims struct {

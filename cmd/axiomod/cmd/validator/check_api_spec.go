@@ -47,7 +47,7 @@ Example:
 // NewCheckAPISpecCmd returns the validator check-api-spec command.
 func NewCheckAPISpecCmd() *cobra.Command {
 	checkAPISpecCmd.Flags().StringP("spec", "s", "", "Path to the API specification file (e.g., OpenAPI yaml/json)")
-	checkAPISpecCmd.MarkFlagRequired("spec")
+	_ = checkAPISpecCmd.MarkFlagRequired("spec") // flag is defined above; error impossible
 	return checkAPISpecCmd
 }
 

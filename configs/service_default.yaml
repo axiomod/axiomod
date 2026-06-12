@@ -9,7 +9,8 @@ observability:
   logFormat: "json"
   tracingEnabled: false
   tracingExporterType: "jaeger" # Options: jaeger, otlp, stdout
-  tracingURL: "http://localhost:14268/api/traces"
+  tracingUrl: "http://localhost:14268/api/traces"
+  tracingInsecure: true # local dev only -- keep false (TLS) in production
   tracingSamplerRatio: 1.0
   metricsEnabled: true
   metricsPort: 9091
@@ -44,7 +45,9 @@ auth:
     clientSecret: "client-secret"
     jwksCacheTtl: 60 # minutes
   jwt:
-    secretKey: "your-256-bit-secret"
+    # DEV PLACEHOLDER -- must be overridden in every deployment, e.g. via
+    # APP_AUTH_JWT_SECRETKEY. Minimum 32 bytes; startup fails otherwise.
+    secretKey: "dev-only-insecure-secret-change-me-now"
     tokenDuration: 60 # minutes
 
 casbin:
@@ -68,5 +71,29 @@ plugins:
   settings:
     multitenancy:
       header: "X-Tenant-ID"
+      required: false
+    auditing:
+      filePath: "" # optional JSON-lines audit log, e.g. "./audit.jsonl"
     elk:
       elasticsearchUrl: "http://localhost:9200"
+      index: "axiomod-logs"
+      flushInterval: "5s"
+      bufferSize: 256
+    redis:
+      addr: "localhost:6379"
+      password: ""
+      db: 0
+    kafka:
+      brokers: ["localhost:9092"]
+      clientId: "axiomod"
+      timeout: "10s"
+    ldap:
+      url: "ldap://localhost:389"
+      bindDn: "cn=service,dc=example,dc=com"
+      bindPassword: "" # set via APP_PLUGINS_SETTINGS_LDAP_BINDPASSWORD
+      baseDn: "ou=people,dc=example,dc=com"
+      userFilter: "(uid=%s)"
+    saml:
+      entityId: "http://localhost:8080/saml/metadata"
+      acsUrl: "http://localhost:8080/saml/acs"
+      idpMetadataUrl: "" # or idpMetadataFile

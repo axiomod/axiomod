@@ -8,9 +8,11 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"go.opentelemetry.io/otel"
+	//nolint:staticcheck // Jaeger exporter kept for backward compatibility; OTLP is the recommended path
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
@@ -19,6 +21,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -79,7 +82,7 @@ func NewTracer(cfg *config.Config, logger *Logger) (*Tracer, error) {
 	if !cfg.Observability.TracingEnabled {
 		logger.Info("Tracing is disabled, using no-op tracer")
 		return &Tracer{
-			Tracer:   trace.NewNoopTracerProvider().Tracer(cfg.App.Name),
+			Tracer:   noop.NewTracerProvider().Tracer(cfg.App.Name),
 			Provider: nil,
 		}, nil
 	}
@@ -111,8 +114,13 @@ func initTracer(cfg *config.Config) (*sdktrace.TracerProvider, error) {
 	case "jaeger":
 		exporter, err = jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(cfg.Observability.TracingURL)))
 	case "otlp":
-		// Assume OTLP over GRPC for now, can be made configurable
-		exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithEndpoint(cfg.Observability.TracingURL), otlptracegrpc.WithInsecure())
+		// OTLP over gRPC. TLS is the default; plaintext requires explicit
+		// opt-in via observability.tracingInsecure.
+		opts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(cfg.Observability.TracingURL)}
+		if cfg.Observability.TracingInsecure {
+			opts = append(opts, otlptracegrpc.WithInsecure())
+		}
+		exporter, err = otlptracegrpc.New(ctx, opts...)
 	case "stdout":
 		exporter, err = stdouttrace.New(stdouttrace.WithPrettyPrint())
 	default:
@@ -187,8 +195,8 @@ func NewMetrics(cfg *config.Config, logger *Logger) (*Metrics, error) {
 	}
 
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(prometheus.NewGoCollector())
-	registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	registry.MustRegister(collectors.NewGoCollector())
+	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 
 	httpRequestsTotal := prometheus.NewCounterVec(
 		prometheus.CounterOpts{

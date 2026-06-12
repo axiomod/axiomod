@@ -212,9 +212,11 @@ func (m *RecoveryMiddleware) Handle() fiber.Handler {
 					zap.String("method", c.Method()),
 					zap.String("path", c.Path()),
 				)
-				c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				if jsonErr := c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"error": "internal server error",
-				})
+				}); jsonErr != nil {
+					m.logger.Error("Failed to write recovery response", zap.Error(jsonErr))
+				}
 			}
 		}()
 

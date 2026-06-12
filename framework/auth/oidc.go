@@ -151,7 +151,7 @@ func (s *OIDCService) VerifyToken(ctx context.Context, tokenString string) (*Cla
 	lastDisco := s.lastDiscovery
 	s.mu.RUnlock()
 
-	if time.Since(lastDisco) > s.config.JWKSCacheTTL*2 && lastDisco.IsZero() == false {
+	if time.Since(lastDisco) > s.config.JWKSCacheTTL*2 && !lastDisco.IsZero() {
 		s.logger.Warn("OIDC discovery is stale", zap.Time("last_success", lastDisco))
 	}
 

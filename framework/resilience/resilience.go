@@ -168,7 +168,9 @@ func (r *Resilience) Execute(ctx context.Context, fn func(ctx context.Context) (
 			break
 		}
 
-		// Wait before retrying
+		// Wait before retrying. If the context expires while waiting, stop
+		// retrying entirely (a bare break here would only exit the select).
+		retryWaitExpired := false
 		select {
 		case <-time.After(delay):
 			// Continue to next retry
@@ -176,6 +178,9 @@ func (r *Resilience) Execute(ctx context.Context, fn func(ctx context.Context) (
 			if errors.Is(timeoutCtx.Err(), context.DeadlineExceeded) {
 				err = ErrTimeout
 			}
+			retryWaitExpired = true
+		}
+		if retryWaitExpired {
 			break
 		}
 

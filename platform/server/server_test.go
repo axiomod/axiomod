@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"io"
+	"net"
 	"net/http"
 	"testing"
 	"time"
@@ -10,10 +12,44 @@ import (
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/middleware"
 	"github.com/axiomod/axiomod/platform/observability"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/fx"
+	"go.uber.org/fx/fxtest"
 )
+
+func TestRegisterHTTPServerFailsOnOccupiedPort(t *testing.T) {
+	// Occupy a port so the server cannot bind to it
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer ln.Close()
+	port := ln.Addr().(*net.TCPAddr).Port
+
+	cfg := &config.Config{
+		App: config.AppConfig{Name: "test-app"},
+		HTTP: config.HTTPConfig{
+			Host: "127.0.0.1",
+			Port: port,
+		},
+		Observability: config.ObservabilityConfig{LogLevel: "error"},
+	}
+
+	logger, _ := observability.NewLogger(cfg)
+	srv := &HTTPServer{App: nil, Config: cfg, Logger: logger}
+
+	app := fxtest.New(t,
+		fx.Supply(srv),
+		fx.Invoke(RegisterHTTPServer),
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = app.Start(ctx)
+	assert.Error(t, err, "startup must fail when the HTTP port is unavailable")
+	assert.Contains(t, err.Error(), "failed to bind HTTP server")
+}
 
 func TestHTTPServer(t *testing.T) {
 	cfg := &config.Config{
@@ -33,7 +69,7 @@ func TestHTTPServer(t *testing.T) {
 	metrics, _ := observability.NewMetrics(cfg, logger)
 	metricsMid := middleware.NewMetricsMiddleware(metrics)
 	tracingMid := middleware.NewTracingMiddleware(&observability.Tracer{
-		Tracer: trace.NewNoopTracerProvider().Tracer("test"),
+		Tracer: noop.NewTracerProvider().Tracer("test"),
 	})
 	h := health.New(logger)
 
@@ -47,7 +83,7 @@ func TestHTTPServer(t *testing.T) {
 
 		// Give server time to start
 		time.Sleep(100 * time.Millisecond)
-		defer srv.App.Shutdown()
+		defer func() { _ = srv.App.Shutdown() }()
 
 		tests := []struct {
 			name   string

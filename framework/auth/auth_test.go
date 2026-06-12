@@ -14,6 +14,46 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestValidateSecretKey(t *testing.T) {
+	tests := []struct {
+		name    string
+		secret  string
+		wantErr bool
+	}{
+		{"empty secret", "", true},
+		{"short secret", "too-short", true},
+		{"31 bytes", strings.Repeat("a", 31), true},
+		{"exactly 32 bytes", strings.Repeat("a", 32), false},
+		{"long secret", strings.Repeat("a", 64), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateSecretKey(tt.secret)
+			if tt.wantErr {
+				assert.ErrorIs(t, err, ErrWeakSecretKey)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestProvideJWTServiceRejectsWeakSecret(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.Auth.JWT.SecretKey = "weak"
+	cfg.Auth.JWT.TokenDuration = 60
+
+	service, err := ProvideJWTService(cfg)
+	assert.Error(t, err)
+	assert.Nil(t, service)
+
+	cfg.Auth.JWT.SecretKey = strings.Repeat("s", 32)
+	service, err = ProvideJWTService(cfg)
+	assert.NoError(t, err)
+	assert.NotNil(t, service)
+}
+
 func TestJWTService(t *testing.T) {
 	secret := "test-secret-key"
 	duration := 1 * time.Hour
@@ -108,7 +148,7 @@ func TestOIDCService(t *testing.T) {
 			if strings.HasSuffix(r.URL.Path, "/jwks") {
 				w.Header().Set("Content-Type", "application/json")
 				// Return empty keyset for now, just to pass parsing
-				w.Write([]byte(`{"keys": []}`))
+				_, _ = w.Write([]byte(`{"keys": []}`))
 				return
 			}
 			w.WriteHeader(http.StatusNotFound)

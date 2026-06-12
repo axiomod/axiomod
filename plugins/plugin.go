@@ -66,13 +66,10 @@ func NewPluginRegistry(cfg *config.Config, logger *observability.Logger, metrics
 		health:  health,
 	}
 
-	// Register built-in plugins
+	// Register built-in plugins. Initialization is deferred to StartAll so
+	// that plugins registered after construction (e.g. via fx.Invoke) are
+	// initialized too.
 	registry.registerBuiltInPlugins()
-
-	// Initialize enabled plugins
-	if err := registry.initializeEnabledPlugins(); err != nil {
-		return nil, err
-	}
 
 	return registry, nil
 }
@@ -106,6 +103,11 @@ func (r *PluginRegistry) Get(name string) (Plugin, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
+	return r.get(name)
+}
+
+// get looks up a plugin without locking; callers must hold r.mu.
+func (r *PluginRegistry) get(name string) (Plugin, error) {
 	plugin, ok := r.plugins[name]
 	if !ok {
 		return nil, fmt.Errorf("plugin not found: %s", name)
@@ -114,39 +116,9 @@ func (r *PluginRegistry) Get(name string) (Plugin, error) {
 	return plugin, nil
 }
 
-// initializeEnabledPlugins initializes all enabled plugins
-func (r *PluginRegistry) initializeEnabledPlugins() error {
-	// Iterate over the map of enabled plugins
-	for name, enabled := range r.config.Plugins.Enabled {
-		if !enabled {
-			continue // Skip disabled plugins
-		}
-
-		plugin, err := r.Get(name)
-		if err != nil {
-			// Log error but continue, maybe plugin wasn't registered
-			r.logger.Error("Plugin defined in config but not found in registry", zap.String("name", name), zap.Error(err))
-			continue
-		}
-
-		// Get plugin settings
-		pluginSettings, ok := r.config.Plugins.Settings[name]
-		if !ok {
-			pluginSettings = make(map[string]interface{}) // Use empty settings if none found
-		}
-
-		// Initialize plugin
-		if err := plugin.Initialize(pluginSettings, r.logger, r.metrics, r.config, r.health); err != nil {
-			return fmt.Errorf("failed to initialize plugin %s: %w", name, err)
-		}
-
-		r.logger.Info("Initialized plugin", zap.String("name", name))
-	}
-
-	return nil
-}
-
-// StartAll starts all enabled plugins
+// StartAll initializes and starts all enabled plugins. It runs after all
+// registrations (built-in and fx-invoked) so every enabled plugin is
+// initialized exactly once before it is started.
 func (r *PluginRegistry) StartAll() error {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -157,11 +129,21 @@ func (r *PluginRegistry) StartAll() error {
 			continue // Skip disabled plugins
 		}
 
-		plugin, err := r.Get(name)
+		plugin, err := r.get(name)
 		if err != nil {
-			// Log error but continue, maybe plugin wasn't registered
-			r.logger.Error("Plugin defined in config but not found in registry", zap.String("name", name), zap.Error(err))
-			continue
+			// Fail fast: an enabled plugin that is not registered is a
+			// configuration error (e.g. a typo in plugins.enabled).
+			return fmt.Errorf("plugin %q is enabled in config but not registered: %w", name, err)
+		}
+
+		// Get plugin settings
+		pluginSettings, ok := r.config.Plugins.Settings[name]
+		if !ok {
+			pluginSettings = make(map[string]interface{}) // Use empty settings if none found
+		}
+
+		if err := plugin.Initialize(pluginSettings, r.logger, r.metrics, r.config, r.health); err != nil {
+			return fmt.Errorf("failed to initialize plugin %s: %w", name, err)
 		}
 
 		if err := plugin.Start(); err != nil {
@@ -185,9 +167,9 @@ func (r *PluginRegistry) StopAll() error {
 			continue // Skip disabled plugins
 		}
 
-		plugin, err := r.Get(name)
+		plugin, err := r.get(name)
 		if err != nil {
-			// Log error but continue, maybe plugin wasn't registered
+			// During shutdown, log and continue so remaining plugins still stop.
 			r.logger.Error("Plugin defined in config but not found in registry", zap.String("name", name), zap.Error(err))
 			continue
 		}

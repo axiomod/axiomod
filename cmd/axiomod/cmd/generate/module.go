@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/axiomod/axiomod/framework/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -72,13 +73,13 @@ Example:
 			GRPCServiceName string
 		}{
 			ModuleName:      name,
-			ModuleNameTitle: strings.Title(name),
-			EntityName:      strings.Title(name),
+			ModuleNameTitle: utils.TitleCase(name),
+			EntityName:      utils.TitleCase(name),
 			EntityNameLower: name,
-			RepositoryName:  strings.Title(name) + "Repository",
-			ServiceName:     strings.Title(name) + "Service",
-			HandlerName:     strings.Title(name) + "Handler",
-			GRPCServiceName: strings.Title(name) + "GRPCService",
+			RepositoryName:  utils.TitleCase(name) + "Repository",
+			ServiceName:     utils.TitleCase(name) + "Service",
+			HandlerName:     utils.TitleCase(name) + "Handler",
+			GRPCServiceName: utils.TitleCase(name) + "GRPCService",
 		}
 
 		// Generate placeholder files
@@ -404,7 +405,7 @@ func registerHooks(lc fx.Lifecycle, logger *zap.Logger, handler *http.{{.Handler
 
 func init() {
 	generateModuleCmd.Flags().StringP("name", "n", "", "Name of the module (required)")
-	generateModuleCmd.MarkFlagRequired("name")
+	_ = generateModuleCmd.MarkFlagRequired("name") // flag is defined above; error impossible
 	// Add subcommands to the parent generateCmd
 	generateCmd.AddCommand(generateModuleCmd)
 }

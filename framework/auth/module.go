@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/axiomod/axiomod/framework/config"
@@ -17,12 +18,16 @@ var Module = fx.Options(
 	fx.Invoke(RegisterOIDCLifecycle),
 )
 
-// ProvideJWTService provides a JWTService
-func ProvideJWTService(cfg *config.Config) *JWTService {
+// ProvideJWTService provides a JWTService. It fails fast if the configured
+// secret key is missing or too weak for HMAC signing.
+func ProvideJWTService(cfg *config.Config) (*JWTService, error) {
+	if err := ValidateSecretKey(cfg.Auth.JWT.SecretKey); err != nil {
+		return nil, fmt.Errorf("auth.jwt.secretKey: %w", err)
+	}
 	return NewJWTService(
 		cfg.Auth.JWT.SecretKey,
 		time.Duration(cfg.Auth.JWT.TokenDuration)*time.Minute,
-	)
+	), nil
 }
 
 // ProvideOIDCService provides an OIDCService

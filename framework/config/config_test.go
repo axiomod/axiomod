@@ -97,7 +97,7 @@ func TestLoadHelpers(t *testing.T) {
 		// Mock CWD or paths
 		origWd, _ := os.Getwd()
 		_ = os.Chdir(tempDir)
-		defer os.Chdir(origWd)
+		defer func() { _ = os.Chdir(origWd) }()
 
 		p, err := LoadServiceConfig()
 		assert.NoError(t, err)
@@ -110,7 +110,7 @@ func TestLoadHelpers(t *testing.T) {
 
 		origWd, _ := os.Getwd()
 		_ = os.Chdir(tempDir)
-		defer os.Chdir(origWd)
+		defer func() { _ = os.Chdir(origWd) }()
 
 		p, err := LoadPluginConfig()
 		assert.NoError(t, err)
@@ -123,7 +123,7 @@ func TestLoadHelpers(t *testing.T) {
 
 		origWd, _ := os.Getwd()
 		_ = os.Chdir(tempDir)
-		defer os.Chdir(origWd)
+		defer func() { _ = os.Chdir(origWd) }()
 
 		p, err := LoadCLIConfig()
 		assert.NoError(t, err)

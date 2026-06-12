@@ -32,41 +32,32 @@ func (m *mockPlugin) Stop() error {
 }
 
 func TestPluginRegistry(t *testing.T) {
-	cfg := &config.Config{
-		Plugins: config.PluginsConfig{
-			Enabled: map[string]bool{
-				"mock": true,
-			},
-			Settings: map[string]map[string]interface{}{
-				"mock": {"key": "value"},
-			},
-		},
-	}
-
 	obsCfg := &config.Config{}
 	logger, _ := observability.NewLogger(obsCfg)
 
 	t.Run("Register and Lifecycle", func(t *testing.T) {
+		// Start with no plugins enabled so the constructor succeeds, then
+		// register the mock and enable it before running the lifecycle.
+		cfg := &config.Config{
+			Plugins: config.PluginsConfig{
+				Enabled: map[string]bool{},
+				Settings: map[string]map[string]interface{}{
+					"mock": {"key": "value"},
+				},
+			},
+		}
+
 		metrics, _ := observability.NewMetrics(obsCfg, logger)
 		registry, err := NewPluginRegistry(cfg, logger, metrics, nil)
 		assert.NoError(t, err)
 
 		mock := &mockPlugin{name: "mock"}
 		registry.Register(mock)
-
-		// Check if initialized during NewPluginRegistry (actually initializeEnabledPlugins is called in NewPluginRegistry)
-		// But in NewPluginRegistry, registerBuiltInPlugins is called first.
-		// If we register after NewPluginRegistry, we need to call initializeEnabledPlugins manually or mock it.
-
-		// Let's re-test with Register called BEFORE initialization logic if possible,
-		// but PluginRegistry currently calls registration in constructor.
-
-		err = registry.initializeEnabledPlugins()
-		assert.NoError(t, err)
-		assert.True(t, mock.initialized)
+		cfg.Plugins.Enabled["mock"] = true
 
 		err = registry.StartAll()
 		assert.NoError(t, err)
+		assert.True(t, mock.initialized)
 		assert.True(t, mock.started)
 
 		err = registry.StopAll()
@@ -74,9 +65,31 @@ func TestPluginRegistry(t *testing.T) {
 		assert.True(t, mock.stopped)
 	})
 
-	t.Run("Get Plugin", func(t *testing.T) {
+	t.Run("Enabled but Unregistered Plugin Fails StartAll", func(t *testing.T) {
+		cfg := &config.Config{
+			Plugins: config.PluginsConfig{
+				Enabled: map[string]bool{"no-such-plugin": true},
+			},
+		}
+
 		metrics, _ := observability.NewMetrics(obsCfg, logger)
-		registry, _ := NewPluginRegistry(cfg, logger, metrics, nil)
+		registry, err := NewPluginRegistry(cfg, logger, metrics, nil)
+		assert.NoError(t, err)
+
+		err = registry.StartAll()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "no-such-plugin")
+	})
+
+	t.Run("Get Plugin", func(t *testing.T) {
+		cfg := &config.Config{
+			Plugins: config.PluginsConfig{Enabled: map[string]bool{}},
+		}
+
+		metrics, _ := observability.NewMetrics(obsCfg, logger)
+		registry, err := NewPluginRegistry(cfg, logger, metrics, nil)
+		assert.NoError(t, err)
+
 		mock := &mockPlugin{name: "mock-2"}
 		registry.Register(mock)
 

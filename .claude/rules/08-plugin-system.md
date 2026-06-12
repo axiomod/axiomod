@@ -52,16 +52,26 @@ Register via `PluginRegistry.Register(&MyPlugin{})` in the `RegisterNewPlugins` 
 
 ## Built-in Plugins
 
-| Plugin | Type | Package |
-|---|---|---|
-| `MySQLPlugin` | Database | `plugins/` |
-| `PostgreSQLPlugin` | Database | `plugins/` |
-| `JWTPlugin` | Auth | `plugins/` |
-| `KeycloakPlugin` | Auth | `plugins/` |
-| `CasdoorPlugin` | Auth | `plugins/` |
-| `CasbinPlugin` | RBAC | `plugins/` |
+| Plugin | Config key | Type | Package |
+|---|---|---|---|
+| `MySQLPlugin` | `mysql` | Database | `plugins/` |
+| `PostgreSQLPlugin` | `postgres` | Database | `plugins/` |
+| `JWTPlugin` | `jwt` | Auth | `plugins/` |
+| `KeycloakPlugin` | `keycloak` | Auth | `plugins/` |
+| `CasdoorPlugin` | `casdoor` | Auth | `plugins/` |
+| `CasbinPlugin` | `casbin` | RBAC | `plugins/` |
 
-Extended: `ldap`, `saml`, `multitenancy`, `audit`, `elk` (in subdirectories).
+Extended (registered via `RegisterNewPlugins` in `cmd/axiomod-server`):
+
+| Plugin | Config key | Package |
+|---|---|---|
+| LDAP | `ldap` | `plugins/auth/ldap` |
+| SAML | `saml` | `plugins/auth/saml` |
+| Multitenancy | `multitenancy` | `plugins/middleware/multitenancy` |
+| Audit | `auditing` | `plugins/audit` |
+| ELK | `elk` | `plugins/logging/elk` |
+| Redis | `redis` | `plugins/cache/redis` |
+| Kafka | `kafka` | `plugins/messaging/kafka` |
 
 ## Configuration
 
@@ -90,10 +100,15 @@ type PluginsConfig struct {
 
 ## Plugin Lifecycle
 
-1. `Register()` -- Adds plugin to registry
-2. `Initialize()` -- Called for enabled plugins with their config
-3. `Start()` -- Called via fx `OnStart` hook
-4. `Stop()` -- Called via fx `OnStop` hook (reverse order)
+1. `Register()` -- Adds plugin to registry (built-ins at construction,
+   extended plugins via `fx.Invoke(RegisterNewPlugins)`)
+2. `Initialize()` -- Called for enabled plugins with their config inside
+   `StartAll()` (fx `OnStart`), after all registrations
+3. `Start()` -- Called right after `Initialize()` in `StartAll()`
+4. `Stop()` -- Called via fx `OnStop` hook
+
+`StartAll()` fails fast if a plugin enabled in `plugins.enabled` is not
+registered, or if any `Initialize()`/`Start()` returns an error.
 
 ## Rules
 

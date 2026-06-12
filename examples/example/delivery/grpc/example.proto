@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package example.v1;
+
+option go_package = "github.com/axiomod/axiomod/examples/example/delivery/grpc;grpc";
+
+// ExampleService manages Example entities.
+service ExampleService {
+  // CreateExample creates a new example.
+  rpc CreateExample(CreateExampleRequest) returns (CreateExampleResponse);
+  // GetExample fetches an example by ID.
+  rpc GetExample(GetExampleRequest) returns (GetExampleResponse);
+}
+
+message CreateExampleRequest {
+  string name = 1;
+  string description = 2;
+  string value_type = 3;
+  int32 count = 4;
+  repeated string tags = 5;
+}
+
+message CreateExampleResponse {
+  string id = 1;
+}
+
+message GetExampleRequest {
+  string id = 1;
+}
+
+message GetExampleResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string value_type = 4;
+  int32 count = 5;
+  repeated string tags = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}
