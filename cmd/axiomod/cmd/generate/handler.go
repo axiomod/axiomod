@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
+
+	"github.com/axiomod/axiomod/framework/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -39,9 +40,12 @@ Example:
 		entityPath := filepath.Join(modulePath, "entity")
 
 		// Create directories if they don't exist
-		os.MkdirAll(handlerPath, 0755)
-		os.MkdirAll(servicePath, 0755)
-		os.MkdirAll(entityPath, 0755)
+		for _, dir := range []string{handlerPath, servicePath, entityPath} {
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				fmt.Printf("Error creating directory %s: %v\n", dir, err)
+				os.Exit(1)
+			}
+		}
 
 		// Define template data
 		data := struct {
@@ -53,11 +57,11 @@ Example:
 			HandlerName     string
 		}{
 			ModuleName:      name,
-			ModuleNameTitle: strings.Title(name),
-			EntityName:      strings.Title(name), // Assuming entity name matches module name
+			ModuleNameTitle: utils.TitleCase(name),
+			EntityName:      utils.TitleCase(name), // Assuming entity name matches module name
 			EntityNameLower: name,
-			ServiceName:     strings.Title(name) + "Service",
-			HandlerName:     strings.Title(name) + "Handler",
+			ServiceName:     utils.TitleCase(name) + "Service",
+			HandlerName:     utils.TitleCase(name) + "Handler",
 		}
 
 		// Generate handler file
@@ -216,7 +220,7 @@ func generateFile(tmplContent, filePath string, data interface{}) {
 func init() {
 	generateHandlerCmd.Flags().StringP("name", "n", "", "Name of the handler (required)")
 	generateHandlerCmd.Flags().StringP("module", "m", "", "Target module name (optional, defaults to handler name)")
-	generateHandlerCmd.MarkFlagRequired("name")
+	_ = generateHandlerCmd.MarkFlagRequired("name") // flag is defined above; error impossible
 	// Add subcommands to the parent generateCmd
 	generateCmd.AddCommand(generateHandlerCmd)
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/middleware"
 	"github.com/axiomod/axiomod/platform/observability"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -69,7 +69,7 @@ func TestHTTPServer(t *testing.T) {
 	metrics, _ := observability.NewMetrics(cfg, logger)
 	metricsMid := middleware.NewMetricsMiddleware(metrics)
 	tracingMid := middleware.NewTracingMiddleware(&observability.Tracer{
-		Tracer: trace.NewNoopTracerProvider().Tracer("test"),
+		Tracer: noop.NewTracerProvider().Tracer("test"),
 	})
 	h := health.New(logger)
 
@@ -83,7 +83,7 @@ func TestHTTPServer(t *testing.T) {
 
 		// Give server time to start
 		time.Sleep(100 * time.Millisecond)
-		defer srv.App.Shutdown()
+		defer func() { _ = srv.App.Shutdown() }()
 
 		tests := []struct {
 			name   string

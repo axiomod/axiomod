@@ -18,7 +18,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24'
+        go-version-file: go.mod
         cache: true
 
     - name: Verify dependencies
@@ -36,8 +36,30 @@ jobs:
     - name: Vet
       run: go vet ./...
 
+    - name: Lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: v1.64.8
+
     - name: Test
-      run: go test -v -race ./...
+      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Coverage report
+      run: |
+        go tool cover -func=coverage.out | tail -1
+        total=$(go tool cover -func=coverage.out | tail -1 | awk '{print $3}' | tr -d '%')
+        threshold=12
+        echo "Total coverage: ${total}% (threshold: ${threshold}%)"
+        if [ "$(echo "$total < $threshold" | bc)" -eq 1 ]; then
+          echo "Coverage ${total}% is below the ${threshold}% threshold"
+          exit 1
+        fi
+
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        path: coverage.out
 
     - name: Build
       run: go build -v ./cmd/axiomod-server

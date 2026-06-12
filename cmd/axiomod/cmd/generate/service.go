@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/axiomod/axiomod/framework/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -37,8 +38,12 @@ Example:
 		repositoryPath := filepath.Join(modulePath, "repository")
 
 		// Create directories if they don't exist
-		os.MkdirAll(servicePath, 0755)
-		os.MkdirAll(repositoryPath, 0755) // Ensure repo dir exists for import
+		for _, dir := range []string{servicePath, repositoryPath} {
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				fmt.Printf("Error creating directory %s: %v\n", dir, err)
+				os.Exit(1)
+			}
+		}
 
 		// Define template data
 		data := struct {
@@ -49,10 +54,10 @@ Example:
 			EntityName      string
 		}{
 			ModuleName:      moduleName,
-			ModuleNameTitle: strings.Title(moduleName),
-			ServiceName:     strings.Title(name) + "Service",
-			RepositoryName:  strings.Title(moduleName) + "Repository", // Assuming repo name convention
-			EntityName:      strings.Title(moduleName),                // Assuming entity name convention
+			ModuleNameTitle: utils.TitleCase(moduleName),
+			ServiceName:     utils.TitleCase(name) + "Service",
+			RepositoryName:  utils.TitleCase(moduleName) + "Repository", // Assuming repo name convention
+			EntityName:      utils.TitleCase(moduleName),                // Assuming entity name convention
 		}
 
 		// Generate service file
@@ -134,7 +139,7 @@ type {{.RepositoryName}} interface {
 func init() {
 	generateServiceCmd.Flags().StringP("name", "n", "", "Name of the service (required)")
 	generateServiceCmd.Flags().StringP("module", "m", "", "Target module name (optional, defaults to service name)")
-	generateServiceCmd.MarkFlagRequired("name")
+	_ = generateServiceCmd.MarkFlagRequired("name") // flag is defined above; error impossible
 	// Add subcommands to the parent generateCmd
 	generateCmd.AddCommand(generateServiceCmd)
 }

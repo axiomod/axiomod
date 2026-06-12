@@ -158,8 +158,8 @@ func TestCircuitBreaker(t *testing.T) {
 
 	// Test half-open state - failed request should re-open the circuit
 	// First, open the circuit again
-	cb.Execute(func() error { return testErr })
-	cb.Execute(func() error { return testErr })
+	_ = cb.Execute(func() error { return testErr })
+	_ = cb.Execute(func() error { return testErr })
 	assert.Equal(t, circuitbreaker.StateOpen, cb.State())
 	time.Sleep(200 * time.Millisecond) // Wait for reset
 	// AllowRequest should transition state to HalfOpen implicitly

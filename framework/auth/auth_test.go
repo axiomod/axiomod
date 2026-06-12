@@ -148,7 +148,7 @@ func TestOIDCService(t *testing.T) {
 			if strings.HasSuffix(r.URL.Path, "/jwks") {
 				w.Header().Set("Content-Type", "application/json")
 				// Return empty keyset for now, just to pass parsing
-				w.Write([]byte(`{"keys": []}`))
+				_, _ = w.Write([]byte(`{"keys": []}`))
 				return
 			}
 			w.WriteHeader(http.StatusNotFound)

@@ -15,6 +15,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// TitleCase upper-cases the first letter of each space-separated word.
+// It replaces the deprecated strings.Title for the ASCII identifiers used
+// in code generation.
+func TitleCase(s string) string {
+	words := strings.Fields(s)
+	for i, word := range words {
+		words[i] = strings.ToUpper(word[:1]) + word[1:]
+	}
+	return strings.Join(words, " ")
+}
+
 // GenerateUUID generates a new UUID
 func GenerateUUID() string {
 	return uuid.New().String()
