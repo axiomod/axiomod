@@ -34,6 +34,10 @@ var Module = fx.Options(
 	fx.Provide(NewServerOptions),
 	fx.Provide(NewMetricsInterceptor),
 	fx.Provide(NewTracingInterceptor),
+	// Expose the underlying grpc.Server so domain modules can register
+	// services via the documented registerGRPCServices(server *grpc.Server,
+	// ...) pattern.
+	fx.Provide(func(s *Server) *grpc.Server { return s.GetServer() }),
 )
 
 // NewServerOptions creates default server options from config

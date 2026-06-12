@@ -273,7 +273,7 @@ func getDefaultDomainRules() *ArchitectureRules {
 			"examples/example/repository":                 {"examples/example/entity"},
 			"examples/example/usecase":                    {"examples/example/entity", "examples/example/repository", "examples/example/service"},
 			"examples/example/service":                    {"examples/example/entity", "examples/example/repository"},
-			"examples/example/delivery/http":              {"examples/example/usecase", "examples/example/entity", "examples/example/delivery/http/middleware"},
+			"examples/example/delivery/http":              {"examples/example/usecase", "examples/example/entity"},
 			"examples/example/delivery/grpc":              {"examples/example/usecase", "examples/example/entity"},
 			"examples/example/infrastructure/persistence": {"examples/example/entity", "examples/example/repository"},
 			"examples/example/infrastructure/cache":       {"examples/example/entity"},

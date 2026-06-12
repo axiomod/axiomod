@@ -10,6 +10,12 @@ service ExampleService {
   rpc CreateExample(CreateExampleRequest) returns (CreateExampleResponse);
   // GetExample fetches an example by ID.
   rpc GetExample(GetExampleRequest) returns (GetExampleResponse);
+  // UpdateExample updates an existing example.
+  rpc UpdateExample(UpdateExampleRequest) returns (UpdateExampleResponse);
+  // DeleteExample removes an example by ID.
+  rpc DeleteExample(DeleteExampleRequest) returns (DeleteExampleResponse);
+  // ListExamples lists examples with optional filters and pagination.
+  rpc ListExamples(ListExamplesRequest) returns (ListExamplesResponse);
 }
 
 message CreateExampleRequest {
@@ -37,4 +43,45 @@ message GetExampleResponse {
   repeated string tags = 6;
   string created_at = 7;
   string updated_at = 8;
+}
+
+message UpdateExampleRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string value_type = 4;
+  int32 count = 5;
+  repeated string tags = 6;
+}
+
+message UpdateExampleResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string value_type = 4;
+  int32 count = 5;
+  repeated string tags = 6;
+  string updated_at = 7;
+}
+
+message DeleteExampleRequest {
+  string id = 1;
+}
+
+message DeleteExampleResponse {
+  string id = 1;
+  bool deleted = 2;
+}
+
+message ListExamplesRequest {
+  string name = 1;
+  string value_type = 2;
+  string tag = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListExamplesResponse {
+  repeated GetExampleResponse items = 1;
+  int32 total = 2;
 }

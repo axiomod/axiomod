@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/axiomod/axiomod/examples/example"
 	"github.com/axiomod/axiomod/framework/auth"
 	grpc_pkg "github.com/axiomod/axiomod/framework/grpc"
 	"github.com/axiomod/axiomod/framework/health"
@@ -27,8 +28,7 @@ func getModuleOptions() []fx.Option {
 		worker.Module,
 
 		// Domain modules
-		// Add your domain modules here, for example:
-		// example.Module,
+		example.Module,
 
 		// Register constructors for any additional dependencies
 		fx.Provide(

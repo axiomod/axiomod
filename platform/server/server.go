@@ -26,6 +26,9 @@ import (
 // Module provides the fx options for the server module
 var Module = fx.Options(
 	fx.Provide(NewHTTPServer),
+	// Expose the Fiber app so domain modules can register routes via the
+	// documented registerHTTPRoutes(app *fiber.App, ...) pattern.
+	fx.Provide(func(s *HTTPServer) *fiber.App { return s.App }),
 )
 
 // HTTPServer represents the HTTP server
