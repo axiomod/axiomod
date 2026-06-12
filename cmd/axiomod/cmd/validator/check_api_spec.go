@@ -53,5 +53,5 @@ func NewCheckAPISpecCmd() *cobra.Command {
 
 func init() {
 	// Add subcommands to the parent validatorCmd
-	validatorCmd.AddCommand(checkAPISpecCmd)
+	validatorCmd.AddCommand(NewCheckAPISpecCmd())
 }

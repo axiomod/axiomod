@@ -43,8 +43,8 @@ Example:
 		// This part requires more complex code modification (AST parsing or simple text removal)
 		// For simplicity, we will just print a message here.
 		fmt.Println("\nPlugin directory removed.")
-		fmt.Println("Please manually unregister the plugin from plugins/builtin_plugins.go")
-		fmt.Println("and remove its options from cmd/axiomod-server/fx_options.go")
+		fmt.Println("Please unregister the plugin from RegisterNewPlugins (cmd/axiomod-server/register_plugins.go)")
+		fmt.Println("and disable it under plugins.enabled in configs/service_default.yaml")
 
 		fmt.Printf("\nPlugin %s removed successfully (manual unregistration required).\n", pluginName)
 	},

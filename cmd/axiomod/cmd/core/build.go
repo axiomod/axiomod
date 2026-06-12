@@ -22,12 +22,20 @@ Example:
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Building the application...")
 
-		// Determine the main package path
-		// Assuming the main service is named 'axiomod-server'
-		mainPackage := "./cmd/axiomod-server"
+		// Locate the application entry point: cmd/<module> for scaffolded
+		// projects, cmd/axiomod-server for the framework repository.
+		module, err := moduleName()
+		if err != nil {
+			fmt.Printf("Error reading go.mod: %v\n", err)
+			os.Exit(1)
+		}
+		mainPackage, binaryName, err := detectMainPackage(module)
+		if err != nil {
+			fmt.Printf("Error locating main package: %v\n", err)
+			os.Exit(1)
+		}
 
-		// Determine the output path
-		outputPath := "bin/axiomod-server"
+		outputPath := filepath.Join("bin", binaryName)
 
 		// Create the output directory if it doesn't exist
 		outputDir := filepath.Dir(outputPath)
@@ -47,7 +55,7 @@ Example:
 
 		startTime := time.Now()
 
-		err := goCmd.Run()
+		err = goCmd.Run()
 
 		duration := time.Since(startTime)
 		fmt.Printf("\nBuild finished in %s\n", duration)

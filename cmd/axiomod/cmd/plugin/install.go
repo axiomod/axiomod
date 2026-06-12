@@ -56,10 +56,10 @@ Example:
 			os.Exit(1)
 		}
 
-		fmt.Println("Please manually register the plugin in plugins/builtin_plugins.go")
+		fmt.Println("Please register the plugin in RegisterNewPlugins (cmd/axiomod-server/register_plugins.go)")
 		fmt.Println("Example registration:")
 		fmt.Printf("import _ \"github.com/axiomod/axiomod/plugins/%s\"\n", pluginName)
-		fmt.Println("// Add plugin options to the Fx application in cmd/axiomod-server/fx_options.go")
+		fmt.Println("and enable it under plugins.enabled in configs/service_default.yaml")
 
 		fmt.Printf("\nPlugin %s installed successfully (manual registration required).\n", pluginName)
 	},

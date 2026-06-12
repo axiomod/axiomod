@@ -3,6 +3,8 @@ package validator
 import (
 	"fmt"
 	"os"
+
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 // ValidateArchitecture validates the architecture of the codebase against the rules defined in the config file
@@ -27,20 +29,30 @@ func ValidateArchitecture(configPath string) error {
 	return nil
 }
 
-// CheckAPISpec validates an API specification file against standards
-// This function is called by the check-api-spec command
+// CheckAPISpec validates an OpenAPI 3.x specification file (YAML or JSON):
+// it must load, resolve its references, and pass structural validation.
+// This function is called by the check-api-spec command.
 func CheckAPISpec(specPath string) error {
-	// Check if the file exists
 	if _, err := os.Stat(specPath); os.IsNotExist(err) {
 		return fmt.Errorf("API specification file not found: %s", specPath)
 	}
 
-	// In a real implementation, this would validate the OpenAPI/Swagger spec
-	// using a library like go-swagger or openapi-validator
 	fmt.Printf("Validating API specification: %s\n", specPath)
-	fmt.Println("API specification validation is a placeholder in this version.")
 
-	// For demonstration purposes, we'll just return success
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+
+	doc, err := loader.LoadFromFile(specPath)
+	if err != nil {
+		return fmt.Errorf("failed to load OpenAPI specification: %w", err)
+	}
+
+	if err := doc.Validate(loader.Context); err != nil {
+		return fmt.Errorf("OpenAPI specification is invalid: %w", err)
+	}
+
+	fmt.Printf("OpenAPI %s specification is valid: %d path(s), title %q\n",
+		doc.OpenAPI, doc.Paths.Len(), doc.Info.Title)
 	return nil
 }
 

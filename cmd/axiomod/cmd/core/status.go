@@ -1,57 +1,84 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
+
+var statusBaseURL string
+
+// healthComponent mirrors framework/health.Component for decoding.
+type healthComponent struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
+}
+
+// healthResponse mirrors framework/health.Response for decoding.
+type healthResponse struct {
+	Status     string                     `json:"status"`
+	Components map[string]healthComponent `json:"components"`
+	Timestamp  string                     `json:"timestamp"`
+}
 
 // statusCmd represents the status command
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Check the status of the running application",
-	Long: `Check the status of the running Go Macroservice application.
-
-This command might check if the process is running, query a status endpoint,
- or check related services like databases.
+	Long: `Check the status of the running Axiomod application by querying its
+readiness endpoint and reporting per-component health.
 
 Example:
   axiomod status
+  axiomod status --url http://localhost:8080
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Checking application status...")
+		base := strings.TrimSuffix(statusBaseURL, "/")
+		fmt.Printf("Checking application status at %s ...\n", base)
 
-		// In a real implementation, this would check the application's status
-		// - Check if the process is running
-		// - Query a status endpoint (if available)
-		// - Check connectivity to dependencies (database, cache, etc.)
-
-		// Example: Basic health check (similar to healthcheck command)
-		err := checkHealth()
+		client := &http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Get(base + "/ready")
 		if err != nil {
-			fmt.Printf("Application appears to be unhealthy: %v\n", err)
-			return
+			fmt.Printf("Application is not reachable: %v\n", err)
+			os.Exit(1)
+		}
+		defer resp.Body.Close()
+
+		var health healthResponse
+		if err := json.NewDecoder(resp.Body).Decode(&health); err != nil {
+			fmt.Printf("Could not decode health response (HTTP %d): %v\n", resp.StatusCode, err)
+			os.Exit(1)
 		}
 
-		fmt.Println("Application is running and healthy.")
+		fmt.Printf("\nStatus: %s (HTTP %d)\n", health.Status, resp.StatusCode)
+		if len(health.Components) > 0 {
+			fmt.Println("\nComponents:")
+			for name, c := range health.Components {
+				line := fmt.Sprintf("  - %-20s %s", name, c.Status)
+				if c.Error != "" {
+					line += "  (" + c.Error + ")"
+				}
+				fmt.Println(line)
+			}
+		}
 
-		// Add more detailed status checks here
-		fmt.Println("\n(Simulated status check - implement actual status retrieval logic)")
+		if resp.StatusCode != http.StatusOK || !strings.EqualFold(health.Status, "UP") {
+			fmt.Println("\nApplication is not healthy.")
+			os.Exit(1)
+		}
+		fmt.Println("\nApplication is running and healthy.")
 	},
-}
-
-// checkHealth performs a basic health check (can be reused from healthcheck command)
-func checkHealth() error {
-	// This is a placeholder. In a real scenario, you might reuse the healthcheck logic
-	// or perform a more comprehensive status check.
-	// For now, let's assume it's healthy if no error occurs.
-	// Replace with actual health check logic.
-	// Example: _, err := http.Get("http://localhost:8080/health")
-	// return err
-	return nil
 }
 
 // NewStatusCmd returns the status command.
 func NewStatusCmd() *cobra.Command {
+	statusCmd.Flags().StringVar(&statusBaseURL, "url", "http://localhost:8080",
+		"base URL of the running application")
 	return statusCmd
 }

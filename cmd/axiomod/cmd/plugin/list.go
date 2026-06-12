@@ -20,42 +20,50 @@ Example:
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Listing installed plugins...")
 
-		// Define plugin directory
-		pluginDir := filepath.Join("internal", "plugins")
-
-		// Check if plugin directory exists
+		pluginDir := "plugins"
 		if _, err := os.Stat(pluginDir); os.IsNotExist(err) {
 			fmt.Println("Plugin directory not found.")
 			return
 		}
 
-		// Read plugin directory
-		entries, err := os.ReadDir(pluginDir)
+		// A plugin is any directory under plugins/ containing a plugin.go
+		// (e.g. audit, auth/ldap, cache/redis). The built-in database/auth
+		// plugins live in plugins/builtin_plugins.go.
+		var found []string
+		err := filepath.WalkDir(pluginDir, func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !d.IsDir() || path == pluginDir {
+				return nil
+			}
+			if d.Name() == "example_plugin" {
+				return filepath.SkipDir
+			}
+			if _, statErr := os.Stat(filepath.Join(path, "plugin.go")); statErr == nil {
+				rel, relErr := filepath.Rel(pluginDir, path)
+				if relErr == nil {
+					found = append(found, filepath.ToSlash(rel))
+				}
+				return filepath.SkipDir
+			}
+			return nil
+		})
 		if err != nil {
-			fmt.Printf("Error reading plugin directory: %v\n", err)
+			fmt.Printf("Error scanning plugin directory: %v\n", err)
 			os.Exit(1)
 		}
 
-		// Filter and display plugins
 		fmt.Println("Installed plugins:")
-		pluginCount := 0
-		for _, entry := range entries {
-			if entry.IsDir() && entry.Name() != "example_plugin" {
-				// Skip the example_plugin and non-directories
-				pluginPath := filepath.Join(pluginDir, entry.Name())
-
-				// Check if it has a plugin.go file (simple heuristic)
-				if _, err := os.Stat(filepath.Join(pluginPath, entry.Name()+".go")); err == nil {
-					fmt.Printf("- %s\n", entry.Name())
-					pluginCount++
-				}
-			}
+		for _, name := range found {
+			fmt.Printf("- %s\n", name)
 		}
+		fmt.Println("- builtin (mysql, postgres, jwt, keycloak, casdoor, casbin in plugins/builtin_plugins.go)")
 
-		if pluginCount == 0 {
-			fmt.Println("No plugins installed.")
+		if len(found) == 0 {
+			fmt.Println("No standalone plugins installed.")
 		} else {
-			fmt.Printf("\nTotal plugins: %d\n", pluginCount)
+			fmt.Printf("\nTotal standalone plugins: %d\n", len(found))
 		}
 	},
 }

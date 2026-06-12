@@ -96,5 +96,5 @@ func NewCheckDocsCmd() *cobra.Command {
 
 func init() {
 	// Add subcommands to the parent validatorCmd
-	validatorCmd.AddCommand(checkDocsCmd)
+	validatorCmd.AddCommand(NewCheckDocsCmd())
 }

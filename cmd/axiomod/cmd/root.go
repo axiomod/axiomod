@@ -76,7 +76,6 @@ func init() {
 	rootCmd.AddCommand(core.NewDockerizeCmd())
 	rootCmd.AddCommand(core.NewDeployCmd())
 	rootCmd.AddCommand(core.NewStatusCmd())
-	rootCmd.AddCommand(core.NewLogsCmd())
 	rootCmd.AddCommand(core.NewHealthcheckCmd())
 	rootCmd.AddCommand(plugin.NewPluginCmd()) // Parent plugin command
 	rootCmd.AddCommand(policy.NewPolicyCmd()) // Parent policy command
