@@ -1,9 +1,12 @@
 package generate
 
 import (
+	"bytes"
 	"fmt"
+	"go/format"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/axiomod/axiomod/framework/utils"
@@ -195,7 +198,8 @@ type {{.EntityName}} struct {
 	},
 }
 
-// generateFile creates a file from a template.
+// generateFile creates a file from a template. Generated Go sources are run
+// through go/format so scaffolded code is always gofmt-clean.
 func generateFile(tmplContent, filePath string, data interface{}) {
 	tmpl, err := template.New(filepath.Base(filePath)).Parse(tmplContent)
 	if err != nil {
@@ -203,15 +207,24 @@ func generateFile(tmplContent, filePath string, data interface{}) {
 		os.Exit(1)
 	}
 
-	file, err := os.Create(filePath)
-	if err != nil {
-		fmt.Printf("Error creating file %s: %v\n", filePath, err)
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		fmt.Printf("Error executing template %s: %v\n", filepath.Base(filePath), err)
 		os.Exit(1)
 	}
-	defer file.Close()
 
-	if err := tmpl.Execute(file, data); err != nil {
-		fmt.Printf("Error executing template %s: %v\n", filepath.Base(filePath), err)
+	content := buf.Bytes()
+	if strings.HasSuffix(filePath, ".go") {
+		formatted, err := format.Source(content)
+		if err != nil {
+			fmt.Printf("Error formatting generated %s: %v\n", filePath, err)
+			os.Exit(1)
+		}
+		content = formatted
+	}
+
+	if err := os.WriteFile(filePath, content, 0644); err != nil {
+		fmt.Printf("Error creating file %s: %v\n", filePath, err)
 		os.Exit(1)
 	}
 	fmt.Printf("Generated file: %s\n", filePath)
