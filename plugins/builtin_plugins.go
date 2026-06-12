@@ -68,9 +68,10 @@ type PostgreSQLPlugin struct {
 	cfg     *config.Config
 }
 
-// Name returns the name of the plugin
+// Name returns the name of the plugin. The name matches the documented
+// plugins.enabled config key ("postgres", not "postgresql").
 func (p *PostgreSQLPlugin) Name() string {
-	return "postgresql"
+	return "postgres"
 }
 
 // Initialize initializes the plugin with the given configuration, logger, and metrics

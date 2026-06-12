@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/axiomod/axiomod/platform/observability"
@@ -42,10 +43,11 @@ type Component struct {
 
 // Health provides health checking functionality
 type Health struct {
-	mu       sync.RWMutex
-	checks   map[string]CheckFunc
-	statuses map[string]Component
-	logger   *observability.Logger
+	mu         sync.RWMutex
+	checks     map[string]CheckFunc
+	statuses   map[string]Component
+	background atomic.Bool
+	logger     *observability.Logger
 }
 
 // Response represents the health check response
@@ -120,10 +122,15 @@ func (h *Health) GetResponse() Response {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	status := h.GetStatus()
+	// Compute status inline rather than via GetStatus to avoid acquiring
+	// the read lock recursively (which can deadlock with a queued writer).
+	status := StatusUp
 	components := make(map[string]Component)
 
 	for name, component := range h.statuses {
+		if component.Status == StatusDown {
+			status = StatusDown
+		}
 		components[name] = component
 	}
 
@@ -137,8 +144,11 @@ func (h *Health) GetResponse() Response {
 // Handler returns an HTTP handler for health checks
 func (h *Health) Handler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Run health checks
-		h.RunChecks()
+		// Run health checks synchronously only when no background loop is
+		// keeping the statuses fresh, so probes don't duplicate the work.
+		if !h.background.Load() {
+			h.RunChecks()
+		}
 
 		// Get response
 		response := h.GetResponse()
@@ -165,7 +175,14 @@ func (h *Health) StartBackgroundChecks(ctx context.Context, interval time.Durati
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
+	h.background.Store(true)
+	defer h.background.Store(false)
+
 	h.logger.Info("Starting background health checks", zap.Duration("interval", interval))
+
+	// Prime the statuses immediately so probes don't see UNKNOWN until the
+	// first tick.
+	h.RunChecks()
 
 	for {
 		select {

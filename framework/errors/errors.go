@@ -124,16 +124,23 @@ func Wrap(err error, message string) error {
 	}
 }
 
-// WithCode adds a code to an error
+// WithCode returns a copy of the error with the given code attached. The
+// input error is never mutated, so shared error values stay safe to reuse
+// concurrently.
 func WithCode(err error, code string) error {
 	if err == nil {
 		return nil
 	}
 
-	// If the error is already an Error, just update the code
+	// If the error is already an Error, clone it with the new code
 	if e, ok := err.(*Error); ok {
-		e.Code = code
-		return e
+		return &Error{
+			Original: e.Original,
+			Message:  e.Message,
+			Code:     code,
+			Stack:    e.Stack,
+			Metadata: cloneMetadata(e.Metadata),
+		}
 	}
 
 	// Create a new Error
@@ -146,16 +153,24 @@ func WithCode(err error, code string) error {
 	}
 }
 
-// WithMetadata adds metadata to an error
+// WithMetadata returns a copy of the error with the key/value pair added to
+// its metadata. The input error is never mutated.
 func WithMetadata(err error, key string, value interface{}) error {
 	if err == nil {
 		return nil
 	}
 
-	// If the error is already an Error, just update the metadata
+	// If the error is already an Error, clone it with the new metadata
 	if e, ok := err.(*Error); ok {
-		e.Metadata[key] = value
-		return e
+		metadata := cloneMetadata(e.Metadata)
+		metadata[key] = value
+		return &Error{
+			Original: e.Original,
+			Message:  e.Message,
+			Code:     e.Code,
+			Stack:    e.Stack,
+			Metadata: metadata,
+		}
 	}
 
 	// Create a new Error
@@ -167,6 +182,15 @@ func WithMetadata(err error, key string, value interface{}) error {
 	}
 	e.Metadata[key] = value
 	return e
+}
+
+// cloneMetadata makes a shallow copy of an error metadata map.
+func cloneMetadata(metadata map[string]interface{}) map[string]interface{} {
+	cloned := make(map[string]interface{}, len(metadata))
+	for k, v := range metadata {
+		cloned[k] = v
+	}
+	return cloned
 }
 
 // Error returns the error message

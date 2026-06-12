@@ -106,6 +106,11 @@ func (r *PluginRegistry) Get(name string) (Plugin, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
+	return r.get(name)
+}
+
+// get looks up a plugin without locking; callers must hold r.mu.
+func (r *PluginRegistry) get(name string) (Plugin, error) {
 	plugin, ok := r.plugins[name]
 	if !ok {
 		return nil, fmt.Errorf("plugin not found: %s", name)
@@ -124,9 +129,9 @@ func (r *PluginRegistry) initializeEnabledPlugins() error {
 
 		plugin, err := r.Get(name)
 		if err != nil {
-			// Log error but continue, maybe plugin wasn't registered
-			r.logger.Error("Plugin defined in config but not found in registry", zap.String("name", name), zap.Error(err))
-			continue
+			// Fail fast: an enabled plugin that is not registered is a
+			// configuration error (e.g. a typo in plugins.enabled).
+			return fmt.Errorf("plugin %q is enabled in config but not registered: %w", name, err)
 		}
 
 		// Get plugin settings
@@ -157,11 +162,11 @@ func (r *PluginRegistry) StartAll() error {
 			continue // Skip disabled plugins
 		}
 
-		plugin, err := r.Get(name)
+		plugin, err := r.get(name)
 		if err != nil {
-			// Log error but continue, maybe plugin wasn't registered
-			r.logger.Error("Plugin defined in config but not found in registry", zap.String("name", name), zap.Error(err))
-			continue
+			// Fail fast: an enabled plugin that is not registered is a
+			// configuration error (e.g. a typo in plugins.enabled).
+			return fmt.Errorf("plugin %q is enabled in config but not registered: %w", name, err)
 		}
 
 		if err := plugin.Start(); err != nil {
@@ -185,9 +190,9 @@ func (r *PluginRegistry) StopAll() error {
 			continue // Skip disabled plugins
 		}
 
-		plugin, err := r.Get(name)
+		plugin, err := r.get(name)
 		if err != nil {
-			// Log error but continue, maybe plugin wasn't registered
+			// During shutdown, log and continue so remaining plugins still stop.
 			r.logger.Error("Plugin defined in config but not found in registry", zap.String("name", name), zap.Error(err))
 			continue
 		}
