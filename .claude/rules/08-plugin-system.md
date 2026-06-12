@@ -61,7 +61,7 @@ Register via `PluginRegistry.Register(&MyPlugin{})` in the `RegisterNewPlugins` 
 | `CasdoorPlugin` | Auth | `plugins/` |
 | `CasbinPlugin` | RBAC | `plugins/` |
 
-Extended: `ldap`, `saml`, `multitenancy`, `audit`, `elk` (in subdirectories).
+Extended: `ldap`, `saml`, `multitenancy`, `audit` (config key `auditing`), `elk`, `redis`, `kafka` (in subdirectories).
 
 ## Configuration
 

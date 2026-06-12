@@ -71,5 +71,29 @@ plugins:
   settings:
     multitenancy:
       header: "X-Tenant-ID"
+      required: false
+    auditing:
+      filePath: "" # optional JSON-lines audit log, e.g. "./audit.jsonl"
     elk:
       elasticsearchUrl: "http://localhost:9200"
+      index: "axiomod-logs"
+      flushInterval: "5s"
+      bufferSize: 256
+    redis:
+      addr: "localhost:6379"
+      password: ""
+      db: 0
+    kafka:
+      brokers: ["localhost:9092"]
+      clientId: "axiomod"
+      timeout: "10s"
+    ldap:
+      url: "ldap://localhost:389"
+      bindDn: "cn=service,dc=example,dc=com"
+      bindPassword: "" # set via APP_PLUGINS_SETTINGS_LDAP_BINDPASSWORD
+      baseDn: "ou=people,dc=example,dc=com"
+      userFilter: "(uid=%s)"
+    saml:
+      entityId: "http://localhost:8080/saml/metadata"
+      acsUrl: "http://localhost:8080/saml/acs"
+      idpMetadataUrl: "" # or idpMetadataFile

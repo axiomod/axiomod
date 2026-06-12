@@ -59,7 +59,6 @@ func registerHTTPRoutes(app *fiber.App, handler *http.ExampleHandler, authMiddle
 
 // registerGRPCServices registers the gRPC services for the example module
 func registerGRPCServices(server *grpc_go.Server, service *grpc.ExampleGRPCService, logger *observability.Logger) {
-	// In a real implementation, we would register the gRPC service with the server
-	// For example: pb.RegisterExampleServiceServer(server, service)
+	grpc.RegisterExampleServiceServer(server, service)
 	logger.Info("Registered example gRPC service")
 }

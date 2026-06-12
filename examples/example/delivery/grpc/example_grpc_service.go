@@ -78,39 +78,9 @@ func (s *ExampleGRPCService) GetExample(ctx context.Context, req *GetExampleRequ
 	}, nil
 }
 
-// Note: In a real implementation, we would have generated gRPC service definitions
-// from protobuf files. For this example, we're defining placeholder types.
-
-// UnimplementedExampleServiceServer is a placeholder for the generated gRPC server interface
-type UnimplementedExampleServiceServer struct{}
-
-// CreateExampleRequest represents the request for creating an example
-type CreateExampleRequest struct {
-	Name        string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	ValueType   string   `protobuf:"bytes,3,opt,name=value_type,json=valueType,proto3" json:"value_type,omitempty"`
-	Count       int32    `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
-	Tags        []string `protobuf:"bytes,5,rep,name=tags,proto3" json:"tags,omitempty"`
-}
-
-// CreateExampleResponse represents the response for creating an example
-type CreateExampleResponse struct {
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-}
-
-// GetExampleRequest represents the request for getting an example
-type GetExampleRequest struct {
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-}
-
-// GetExampleResponse represents the response for getting an example
-type GetExampleResponse struct {
-	Id          string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name        string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description string   `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	ValueType   string   `protobuf:"bytes,4,opt,name=value_type,json=valueType,proto3" json:"value_type,omitempty"`
-	Count       int32    `protobuf:"varint,5,opt,name=count,proto3" json:"count,omitempty"`
-	Tags        []string `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty"`
-	CreatedAt   string   `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt   string   `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-}
+// The request/response message types and the ExampleServiceServer interface
+// are generated from example.proto (see example.pb.go and example_grpc.pb.go).
+// Regenerate with:
+//
+//	protoc --go_out=. --go_opt=paths=source_relative \
+//	       --go-grpc_out=. --go-grpc_opt=paths=source_relative example.proto

@@ -55,12 +55,9 @@ func TestPluginRegistry(t *testing.T) {
 		registry.Register(mock)
 		cfg.Plugins.Enabled["mock"] = true
 
-		err = registry.initializeEnabledPlugins()
-		assert.NoError(t, err)
-		assert.True(t, mock.initialized)
-
 		err = registry.StartAll()
 		assert.NoError(t, err)
+		assert.True(t, mock.initialized)
 		assert.True(t, mock.started)
 
 		err = registry.StopAll()
@@ -68,7 +65,7 @@ func TestPluginRegistry(t *testing.T) {
 		assert.True(t, mock.stopped)
 	})
 
-	t.Run("Enabled but Unregistered Plugin Fails Construction", func(t *testing.T) {
+	t.Run("Enabled but Unregistered Plugin Fails StartAll", func(t *testing.T) {
 		cfg := &config.Config{
 			Plugins: config.PluginsConfig{
 				Enabled: map[string]bool{"no-such-plugin": true},
@@ -77,8 +74,10 @@ func TestPluginRegistry(t *testing.T) {
 
 		metrics, _ := observability.NewMetrics(obsCfg, logger)
 		registry, err := NewPluginRegistry(cfg, logger, metrics, nil)
+		assert.NoError(t, err)
+
+		err = registry.StartAll()
 		assert.Error(t, err)
-		assert.Nil(t, registry)
 		assert.Contains(t, err.Error(), "no-such-plugin")
 	})
 
