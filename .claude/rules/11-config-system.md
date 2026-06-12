@@ -35,7 +35,6 @@ observability:
   tracingExporterType: "jaeger"
   tracingSamplerRatio: 1.0
   metricsEnabled: true
-  metricsPort: 9100
 
 database:
   sslMode: "disable"

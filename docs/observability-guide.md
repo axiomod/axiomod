@@ -21,8 +21,8 @@ observability:
 Or through environment variables:
 
 ```bash
-export LOG_LEVEL=info
-export LOG_FORMAT=json
+export APP_OBSERVABILITY_LOGLEVEL=info
+export APP_OBSERVABILITY_LOGFORMAT=json
 ```
 
 ### Usage
@@ -90,15 +90,13 @@ Metrics can be configured in the `config.yaml` file:
 
 ```yaml
 observability:
-  metricsEnabled: true
-  metricsPort: 9100
+  metricsEnabled: true # served at /metrics on the HTTP port
 ```
 
 Or through environment variables:
 
 ```bash
-export METRICS_ENABLED=true
-export METRICS_PORT=9100
+export APP_OBSERVABILITY_METRICSENABLED=true
 ```
 
 ### Usage
@@ -172,18 +170,16 @@ Tracing can be configured in the `config.yaml` file:
 ```yaml
 observability:
   tracingEnabled: true
-  tracingServiceName: axiomod
   tracingExporterType: jaeger
-  tracingExporterURL: http://jaeger:14268/api/traces
+  tracingUrl: "http://jaeger:14268/api/traces"
 ```
 
 Or through environment variables:
 
 ```bash
-export TRACING_ENABLED=true
-export TRACING_SERVICE_NAME=axiomod
-export TRACING_EXPORTER_TYPE=jaeger
-export TRACING_EXPORTER_URL=http://jaeger:14268/api/traces
+export APP_OBSERVABILITY_TRACINGENABLED=true
+export APP_OBSERVABILITY_TRACINGEXPORTERTYPE=jaeger
+export APP_OBSERVABILITY_TRACINGURL=http://jaeger:14268/api/traces
 ```
 
 ### Usage
@@ -249,7 +245,7 @@ In production environments, you may want to sample traces to reduce the volume o
 
 ```yaml
 observability:
-  tracingSamplingRatio: 0.1  # Sample 10% of traces
+  tracingSamplerRatio: 0.1  # Sample 10% of traces
 ```
 
 ## Health Checks
@@ -343,7 +339,7 @@ output {
 ```yaml
 observability:
   tracingExporterType: jaeger
-  tracingExporterURL: http://jaeger:14268/api/traces
+  tracingUrl: "http://jaeger:14268/api/traces"
 ```
 
 2. Use the Jaeger UI to view and analyze traces.

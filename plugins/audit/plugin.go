@@ -13,6 +13,7 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/observability"
+	"github.com/axiomod/axiomod/plugins"
 
 	"go.uber.org/zap"
 )
@@ -48,9 +49,10 @@ func (p *Plugin) Name() string {
 //   - filePath (string): optional path of an append-only JSON-lines audit
 //     log. When empty, events are only written to the structured logger.
 func (p *Plugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
+	settings = plugins.NormalizeSettings(settings)
 	p.logger = logger
 
-	if filePath, ok := settings["filePath"].(string); ok {
+	if filePath, ok := settings["filepath"].(string); ok {
 		p.filePath = filePath
 	}
 

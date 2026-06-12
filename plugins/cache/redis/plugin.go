@@ -10,6 +10,7 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/observability"
+	"github.com/axiomod/axiomod/plugins"
 
 	goredis "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -40,6 +41,7 @@ func (p *Plugin) Name() string {
 //   - password (string): optional password
 //   - db (int): database number, default 0
 func (p *Plugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, h *health.Health) error {
+	settings = plugins.NormalizeSettings(settings)
 	p.logger = logger
 	p.addr = defaultAddr
 

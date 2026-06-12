@@ -42,229 +42,121 @@ The framework uses a hierarchical configuration system that can be configured th
 
 ### Configuration File
 
-Create a `config.yaml` file with your configuration:
+The canonical configuration file is `configs/service_default.yaml`; the
+loader searches `configs/`, `config/`, and the working directory, and the
+Docker image passes `-config /app/configs/service_default.yaml` explicitly.
+A production configuration looks like:
 
 ```yaml
 app:
-  name: axiomod
-  environment: production
-  version: 1.0.0
+  name: "axiomod-service"
+  environment: "production"
+  version: "0.2.0"
   debug: false
 
 http:
-  host: 0.0.0.0
+  host: "0.0.0.0"
   port: 8080
-  readTimeout: 30
-  writeTimeout: 30
-  shutdownTimeout: 30
+  readTimeout: 10
+  writeTimeout: 10
 
 grpc:
-  host: 0.0.0.0
+  host: "0.0.0.0"
   port: 9090
-  shutdownTimeout: 30
 
 database:
-  driver: mysql
-  host: mysql
+  driver: "mysql" # or postgres
+  host: "mysql"
   port: 3306
-  username: root
-  password: password
-  database: axiomod
-  maxOpenConns: 10
+  user: "axiomod"
+  password: "" # inject via APP_DATABASE_PASSWORD
+  name: "axiomod"
+  sslMode: "require"
+  orm: "ent" # ent (default) | sql
+  maxOpenConns: 25
   maxIdleConns: 5
-  connMaxLifetime: 300
-
-
-kafka:
-  brokers:
-    - kafka:9092
-  groupId: axiomod
+  connMaxLifetime: 15 # minutes
+  slowQueryThreshold: 200 # milliseconds
 
 auth:
-  provider: jwt
-  jwtSecret: your-secret-key
-  jwtDuration: 3600
+  jwt:
+    secretKey: "" # inject via APP_AUTH_JWT_SECRETKEY (min 32 bytes)
+    tokenDuration: 60 # minutes
 
 observability:
-  logLevel: info
-  logFormat: json
-  metricsEnabled: true
-  metricsPort: 9100
+  logLevel: "info"
+  logFormat: "json"
+  metricsEnabled: true # served at /metrics on the HTTP port
   tracingEnabled: true
-  tracingServiceName: axiomod
-  tracingExporterType: jaeger
-  tracingExporterURL: http://jaeger:14268/api/traces
+  tracingExporterType: "otlp" # jaeger | otlp | stdout
+  tracingUrl: "jaeger:4317"
+  tracingSamplerRatio: 0.1
 
 plugins:
-  enabled:
-    - mysql
-    - jwt
-  config:
-    mysql:
-      maxRetries: 3
-    jwt:
-      algorithm: HS256
+  enabled: # map of plugin name -> bool
+    mysql: true
+    jwt: true
+    kafka: true
+  settings: # per-plugin settings blocks
+    kafka:
+      brokers: ["kafka:9092"]
+      clientId: "axiomod"
 ```
 
 ### Environment Variables
 
-You can override configuration values using environment variables:
+Every Viper key can be overridden with an environment variable: prefix
+`APP_`, replace key dots with underscores (the camelCase part stays joined).
+Overrides apply to keys present in the configuration file.
 
 ```bash
-# App configuration
-export APP_NAME=axiomod
-export APP_ENV=production
-export APP_VERSION=1.0.0
-export APP_DEBUG=false
+# Viper key                  -> environment variable
+# app.environment            -> APP_APP_ENVIRONMENT
+# http.port                  -> APP_HTTP_PORT
+# database.host              -> APP_DATABASE_HOST
+# database.password          -> APP_DATABASE_PASSWORD
+# auth.jwt.secretKey         -> APP_AUTH_JWT_SECRETKEY
+# observability.logLevel     -> APP_OBSERVABILITY_LOGLEVEL
+# plugins.enabled.postgres   -> APP_PLUGINS_ENABLED_POSTGRES
 
-# HTTP configuration
-export HTTP_HOST=0.0.0.0
-export HTTP_PORT=8080
-
-# Database configuration
-export DB_DRIVER=mysql
-export DB_HOST=mysql
-export DB_PORT=3306
-export DB_USERNAME=root
-export DB_PASSWORD=password
-export DB_DATABASE=axiomod
-
-# And so on for other configuration values...
+export APP_APP_ENVIRONMENT=production
+export APP_DATABASE_HOST=mysql
+export APP_DATABASE_PASSWORD=change-me
+export APP_AUTH_JWT_SECRETKEY=$(openssl rand -hex 32)
 ```
 
 ## Deployment Options
 
 ### Docker Compose
 
-For local development or simple deployments, you can use Docker Compose:
-
-```yaml
-# docker-compose.yml
-version: '3'
-
-services:
-  app:
-    image: axiomod-framework:latest
-    ports:
-      - "8080:8080"
-      - "9090:9090"
-      - "9100:9100"
-    environment:
-      - APP_ENV=production
-      - DB_HOST=mysql
-      - REDIS_HOST=redis
-      - KAFKA_BROKERS=kafka:9092
-    depends_on:
-      - mysql
-      - kafka
-
-  mysql:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=axiomod
-    volumes:
-      - mysql-data:/var/lib/mysql
-
-
-  kafka:
-    image: confluentinc/cp-kafka:7.0.0
-    environment:
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-    volumes:
-      - kafka-data:/var/lib/kafka/data
-
-volumes:
-  mysql-data:
-  kafka-data:
-```
-
-To start the services:
+A complete reference stack (app, PostgreSQL, Redis, Kafka/Zookeeper, Jaeger,
+Prometheus) ships at
+[`docker-compose.reference.yaml`](../docker-compose.reference.yaml):
 
 ```bash
-docker-compose up -d
+docker compose -f docker-compose.reference.yaml up -d
 ```
+
+The app service demonstrates the real `APP_*` environment overrides
+(`APP_DATABASE_HOST=postgres`, `APP_PLUGINS_ENABLED_POSTGRES=true`, …).
+Ports: 8080 (HTTP + `/metrics`), 9090 (gRPC); Prometheus UI is mapped to
+host port 9091, Jaeger UI to 16686.
 
 ### Kubernetes
 
-For production deployments, you can use Kubernetes:
-
-```yaml
-# kubernetes/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: axiomod
-  labels:
-    app: axiomod
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: axiomod
-  template:
-    metadata:
-      labels:
-        app: axiomod
-    spec:
-      containers:
-      - name: axiomod
-        image: axiomod:latest
-        ports:
-        - containerPort: 8080
-        - containerPort: 9090
-        env:
-        - name: APP_ENV
-          value: production
-        - name: DB_HOST
-          value: mysql
-        - name: KAFKA_BROKERS
-          value: kafka:9092
-        resources:
-          limits:
-            cpu: "1"
-            memory: "512Mi"
-          requests:
-            cpu: "0.5"
-            memory: "256Mi"
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /live
-            port: 8080
-          initialDelaySeconds: 15
-          periodSeconds: 20
-```
-
-```yaml
-# kubernetes/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: axiomod
-spec:
-  selector:
-    app: axiomod
-  ports:
-  - name: http
-    port: 8080
-    targetPort: 8080
-  - name: grpc
-    port: 9090
-    targetPort: 9090
-  type: ClusterIP
-```
-
-To deploy to Kubernetes:
+Production-ready manifests ship in
+[`deploy/kubernetes/`](../deploy/kubernetes/): `deployment.yaml` (3 replicas,
+non-root security context, `/ready` and `/live` probes, secret-injected
+credentials), `service.yaml` (ClusterIP for http/grpc), and `configmap.yaml`
+(the mounted `service_default.yaml`).
 
 ```bash
-kubectl apply -f kubernetes/
+# Create the secrets the deployment references
+kubectl create secret generic axiomod-secrets \
+  --from-literal=DB_PASSWORD=your-db-password \
+  --from-literal=JWT_SECRET=$(openssl rand -hex 32)
+
+kubectl apply -f deploy/kubernetes/
 ```
 
 ## Scaling
@@ -279,7 +171,7 @@ The framework is designed to be horizontally scalable. You can scale the applica
 
 The framework provides built-in support for monitoring and observability:
 
-- **Metrics**: Exposed on port 9100 in Prometheus format
+- **Metrics**: Exposed at `/metrics` on the HTTP port (8080) in Prometheus format
 - **Logging**: Structured JSON logs
 - **Tracing**: Distributed tracing with OpenTelemetry
 
@@ -293,7 +185,7 @@ scrape_configs:
   - job_name: 'axiomod'
     scrape_interval: 15s
     static_configs:
-      - targets: ['axiomod:9100']
+      - targets: ["axiomod:8080"]
 ```
 
 ### ELK Stack

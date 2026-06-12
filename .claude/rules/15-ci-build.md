@@ -60,5 +60,5 @@ exclusion presets. CI pins the same version via `golangci-lint-action`.
 ```yaml
 # docker-compose.reference.yaml infrastructure:
 # PostgreSQL 14, Redis 6, Kafka/Zookeeper, Jaeger, Prometheus
-# App: ports 8080 (HTTP), 9090 (gRPC), 9100 (metrics)
+# App: ports 8080 (HTTP, /metrics), 9090 (gRPC)
 ```

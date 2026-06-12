@@ -18,6 +18,7 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/observability"
+	"github.com/axiomod/axiomod/plugins"
 
 	crewsaml "github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
@@ -54,14 +55,15 @@ func (p *Plugin) Name() string {
 //   - certFile (string): SP certificate (PEM), optional, enables signing
 //   - keyFile (string): SP private key (PEM), optional, enables signing
 func (p *Plugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, h *health.Health) error {
+	settings = plugins.NormalizeSettings(settings)
 	p.logger = logger
 
-	p.entityID, _ = settings["entityId"].(string)
-	p.acsURL, _ = settings["acsUrl"].(string)
-	p.idpMetadataURL, _ = settings["idpMetadataUrl"].(string)
-	p.idpMetadataFile, _ = settings["idpMetadataFile"].(string)
-	p.certFile, _ = settings["certFile"].(string)
-	p.keyFile, _ = settings["keyFile"].(string)
+	p.entityID, _ = settings["entityid"].(string)
+	p.acsURL, _ = settings["acsurl"].(string)
+	p.idpMetadataURL, _ = settings["idpmetadataurl"].(string)
+	p.idpMetadataFile, _ = settings["idpmetadatafile"].(string)
+	p.certFile, _ = settings["certfile"].(string)
+	p.keyFile, _ = settings["keyfile"].(string)
 
 	if p.entityID == "" || p.acsURL == "" {
 		return fmt.Errorf("saml plugin: entityId and acsUrl settings are required")

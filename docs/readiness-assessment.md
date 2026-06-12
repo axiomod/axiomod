@@ -1,45 +1,52 @@
 # Axiomod Framework: Readiness Assessment
 
-**Date**: 2025-12-21
-**Status**: **Stable / Production Ready**
+**Date**: 2026-06-12
+**Status**: **Release Candidate** — pending the first tagged release
 
-## Overview
+This assessment lists only claims an evaluator can verify by running the
+command shown. Methodology and the full findings history:
+[`docs/audit/2026-06-12-launch-readiness/`](audit/2026-06-12-launch-readiness/feature-implementation-audit.md).
 
-The Axiomod framework has been successfully hardened, verified, and documented. It builds correctly, passes all unit and integration tests, and the runtime stability has been validated. It is ready for building production microservices.
+## 1. Verified Results
 
-## 1. Validation Results
-
-### ✅ Runtime Stability
-
-- **Result**: `PASS`
-- **Details**: The server successfully boots up, initializes the dependency graph, starts HTTP/gRPC listeners, and handles lifecycle hooks (Start/Stop) gracefully.
+| Check | Command | Result |
+| :--- | :--- | :--- |
+| Build | `go build ./...` | ✅ PASS |
+| Vet / format | `go vet ./...` · `gofmt -l .` | ✅ PASS / clean |
+| Tests (race) | `go test -race ./...` | ✅ all packages green |
+| Coverage | `go test -coverprofile=... ./...` | ✅ ~60% total (CI gate: 50%) |
+| Architecture | `make validate-arch` | ✅ 0 violations (enforced in CI) |
+| Server boot | `go run ./cmd/axiomod-server` | ✅ HTTP :8080, gRPC :9090, graceful shutdown, no error logs |
+| Quick start | `axiomod init x --dev` → `go mod tidy && go build ./...` | ✅ compiles (CI smoke test) |
+| Example API | `go test -run TestExampleModuleCRUD ./cmd/axiomod-server/` | ✅ full CRUD over HTTP with JWT auth |
 
 ## 2. Feature Readiness
 
-| Feature Area | Status | Notes |
+| Feature Area | Status | Evidence |
 | :--- | :--- | :--- |
-| **Architecture** | 🟢 Ready | Clean Architecture + Fx DI implemented correctly. |
-| **Database** | 🟢 Ready | MySQL/PostgreSQL plugins with connection pooling and transaction support. |
-| **Auth** | 🟢 Ready | JWT generation/validation and OIDC (Keycloak) integration active. |
-| **Observability** | 🟢 Ready | Zap Logging, Prometheus Metrics, and OpenTelemetry Tracing hooks are present. |
-| **Async** | 🟢 Ready | Kafka Producer/Consumer and Background Worker pool implemented. |
-| **Plugins** | 🟢 Ready | Dynamic plugin registry is working; built-in plugins (Auth, DB, etc.) are registered. |
-| **CLI** | 🟡 Beta | `axiomod init` works for scaffolding. Migrations and Validator commands are present but basic. |
+| **Architecture** | 🟢 Ready | Layering enforced by `validator architecture` in CI; framework/platform direction consistent |
+| **Database** | 🟢 Ready | postgres + mysql drivers registered; Ent default ORM with `database.orm` switch; migrations for both drivers |
+| **Auth** | 🟢 Ready | JWT (≥32-byte secret enforced), OIDC with JWKS signature verification (opt-in via issuerUrl), Casbin RBAC with shipped model/policy files |
+| **Observability** | 🟢 Ready | zap logging, Prometheus at `/metrics` (HTTP port), OTel tracing (jaeger/otlp/stdout) |
+| **Async** | 🟢 Ready | Kafka producer/consumer (Sarama), worker pool |
+| **Plugins** | 🟢 Ready | 13 plugins; registry fail-fast; settings keys normalized (camelCase YAML works) |
+| **Example domain** | 🟢 Ready | Registered in the server; full CRUD over HTTP + gRPC; integration-tested |
+| **CLI** | 🟡 Beta | All commands functional or honestly labeled (`deploy` defaults to dry-run); generators emit gofmt-clean code |
+| **Releases** | 🔴 Pending | GoReleaser + workflow ready; **no tag published yet** — `go get` requires the first release (maintainer action) |
 
-## 3. Documentation Status
+## 3. Known Gaps (tracked)
 
-- **Main README**: Updated to reflect production readiness.
-- **Developer Guide**: Complete.
-- **Architecture Guide**: Complete & Synchronized with code.
-- **API Reference**: Complete.
-- **Missing Docs**: All gaps identified in previous audits have been filled.
+1. **First release not cut** — `docs/release-checklist.md` flow is ready;
+   tagging is a maintainer action.
+2. **OpenAPI generation** not built-in (validator exists; generation is on
+   the [CLI roadmap](roadmap/cli-enhancement.md)).
+3. **Coverage** at ~60% against the 80% target for core modules; CI gate
+   ratchets upward.
+4. Roadmap items (Vault, mTLS, rate limiting, outbox/DLQ, monorepo tooling)
+   remain planned — see [docs/roadmap.md](roadmap.md).
 
-## 4. Recommendations for Next Steps
+## 4. Recommendation
 
-1. **CI/CD Pipeline**: Set up a GitHub Actions or GitLab CI pipeline using the provided `Makefile` targets (`test`, `lint`, `build`).
-2. **Plugin Ecosystem**: Start building domain-specific plugins (e.g., specific payment gateways) using the `Plugin` interface.
-3. **CLI Enhancement**: Expand the CLI to support generating specific Clean Architecture layers (Use Cases, Repositories) via `axiomod generate`.
-
-## Conclusion
-
-The framework is structurally sound, stable, and well-documented. It meets the criteria for a production-ready Go framework.
+Cut `v0.3.0` via the release checklist, verify
+`go get github.com/axiomod/axiomod@v0.3.0` from a scratch module, then
+re-run this assessment and flip **Releases** to 🟢.

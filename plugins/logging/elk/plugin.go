@@ -14,6 +14,7 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/observability"
+	"github.com/axiomod/axiomod/plugins"
 
 	"go.uber.org/zap"
 )
@@ -55,13 +56,14 @@ func (p *Plugin) Name() string {
 //   - flushInterval (string): Go duration between background flushes, default "5s"
 //   - bufferSize (int): documents buffered before a forced flush, default 256
 func (p *Plugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, h *health.Health) error {
+	settings = plugins.NormalizeSettings(settings)
 	p.logger = logger
 	p.index = defaultIndex
 	p.flushInterval = defaultFlushInterval
 	p.bufferSize = defaultBufferSize
 	p.client = &http.Client{Timeout: defaultHTTPTimeout}
 
-	url, _ := settings["elasticsearchUrl"].(string)
+	url, _ := settings["elasticsearchurl"].(string)
 	if url == "" {
 		return fmt.Errorf("elk plugin: elasticsearchUrl setting is required")
 	}
@@ -70,14 +72,14 @@ func (p *Plugin) Initialize(settings map[string]interface{}, logger *observabili
 	if index, ok := settings["index"].(string); ok && index != "" {
 		p.index = index
 	}
-	if interval, ok := settings["flushInterval"].(string); ok && interval != "" {
+	if interval, ok := settings["flushinterval"].(string); ok && interval != "" {
 		parsed, err := time.ParseDuration(interval)
 		if err != nil {
 			return fmt.Errorf("elk plugin: invalid flushInterval %q: %w", interval, err)
 		}
 		p.flushInterval = parsed
 	}
-	if size, ok := settings["bufferSize"].(int); ok && size > 0 {
+	if size, ok := settings["buffersize"].(int); ok && size > 0 {
 		p.bufferSize = size
 	}
 

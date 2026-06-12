@@ -23,7 +23,25 @@ func (h *Handler) GetUser(c *fiber.Ctx) error {
 
 ### Error Handling
 
-The framework includes a centralized error handler that maps internal framework errors (from `github.com/axiomod/axiomod/framework/errors`) to appropriate HTTP status codes (e.g., `ErrNotFound` -> `404`).
+Map domain and framework errors to status codes in the handler:
+`framework/errors.ToHTTPCode(err)` converts coded framework errors (e.g.
+`CodeNotFound` -> `404`), and domain modules map their own errors — see
+`errorResponse` in
+[`examples/example/delivery/http/example_handler.go`](../examples/example/delivery/http/example_handler.go)
+(not-found -> 404, validation -> 400, otherwise 500).
+
+### Worked Example
+
+The registered example module serves a complete CRUD surface under
+`/api/v1/examples` (JWT bearer auth required):
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/v1/examples/` | Create (201) |
+| GET | `/api/v1/examples/` | List with `name`, `valueType`, `tag`, `limit`, `offset` query filters |
+| GET | `/api/v1/examples/:id` | Get by ID (404 when missing) |
+| PUT | `/api/v1/examples/:id` | Update |
+| DELETE | `/api/v1/examples/:id` | Delete |
 
 ## 2. gRPC API
 
@@ -31,14 +49,19 @@ gRPC is used for high-performance service-to-service communication.
 
 ### Contracts (Protobuf)
 
-Define your API contracts in the `api/` directory using `.proto` files.
+By convention, each domain owns its contracts in
+`<domain>/delivery/grpc/*.proto`. The reference contract is
+[`examples/example/delivery/grpc/example.proto`](../examples/example/delivery/grpc/example.proto)
+(Create/Get/Update/Delete/List). Regenerate with `protoc` or `buf` using
+`protoc-gen-go` and `protoc-gen-go-grpc`:
 
 ```proto
 syntax = "proto3";
-package axiomod.v1;
+package example.v1;
 
-service UserService {
-  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+service ExampleService {
+  rpc CreateExample(CreateExampleRequest) returns (CreateExampleResponse);
+  rpc GetExample(GetExampleRequest) returns (GetExampleResponse);
 }
 ```
 
@@ -60,7 +83,10 @@ func (s *Server) GetUser(ctx context.Context, req *v1.GetUserRequest) (*v1.GetUs
 
 ### OpenAPI / Swagger
 
-For HTTP APIs, it is recommended to use `swaggo/swag` or similar tools to generate OpenAPI specifications from comments in your code.
+The framework does not yet generate OpenAPI specifications (planned — see
+[the CLI roadmap](roadmap/cli-enhancement.md)). If you author a spec by
+hand, validate it with `axiomod validator check-api-spec --spec <file>`.
+For generation today, `swaggo/swag` works with Fiber handlers.
 
 ### gRPC Reflection
 

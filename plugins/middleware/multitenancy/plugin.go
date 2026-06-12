@@ -8,6 +8,7 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/observability"
+	"github.com/axiomod/axiomod/plugins"
 
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -37,6 +38,7 @@ func (p *Plugin) Name() string {
 //   - header (string): header carrying the tenant ID, default "X-Tenant-ID"
 //   - required (bool): reject requests without a tenant header, default false
 func (p *Plugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, health *health.Health) error {
+	settings = plugins.NormalizeSettings(settings)
 	p.logger = logger
 	p.header = DefaultTenantHeader
 

@@ -11,6 +11,7 @@ import (
 	"github.com/axiomod/axiomod/framework/health"
 	fwkafka "github.com/axiomod/axiomod/framework/kafka"
 	"github.com/axiomod/axiomod/framework/observability"
+	"github.com/axiomod/axiomod/plugins"
 
 	"go.uber.org/zap"
 )
@@ -36,13 +37,14 @@ func (p *Plugin) Name() string {
 //   - retries (int): max produce retries, default 3
 //   - timeout (string): Go duration for dial/read/write timeouts, default "10s"
 func (p *Plugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, h *health.Health) error {
+	settings = plugins.NormalizeSettings(settings)
 	p.logger = logger
 	p.producerConfig = fwkafka.DefaultProducerConfig()
 
 	if brokers := toStringSlice(settings["brokers"]); len(brokers) > 0 {
 		p.producerConfig.Brokers = brokers
 	}
-	if clientID, ok := settings["clientId"].(string); ok && clientID != "" {
+	if clientID, ok := settings["clientid"].(string); ok && clientID != "" {
 		p.producerConfig.ClientID = clientID
 	}
 	if retries, ok := settings["retries"].(int); ok && retries > 0 {

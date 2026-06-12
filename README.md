@@ -27,9 +27,9 @@
 |----------|----------|
 | **Core** | Clean Architecture, Fx Dependency Injection, Config Management (Viper) |
 | **API** | Fiber v2 (HTTP), gRPC, Middleware Chains, Validators |
-| **Data** | MySQL/PostgreSQL Plugins, Connection Pooling, Transaction Management |
+| **Data** | Ent ORM (default) with plain-SQL option, MySQL/PostgreSQL Plugins, Connection Pooling, Transactions, Migrations |
 | **Auth** | JWT, OIDC (Keycloak), LDAP, SAML 2.0, RBAC (Casbin) |
-| **Ops** | Health Probes (Liveness/Readiness), Prometheus Metrics, OpenTelemetry Traces |
+| **Ops** | Health Probes (Liveness/Readiness), Prometheus Metrics, OpenTelemetry Traces, Multitenancy & Audit Plugins |
 | **Async** | Kafka Producers/Consumers, Background Worker Pools |
 
 ## 🔌 Plugins
@@ -91,7 +91,13 @@ Use the CLI to scaffold a new service:
 ./bin/axiomod init my-awesome-service
 cd my-awesome-service
 go mod tidy
+go build ./...
 ```
+
+The generated `go.mod` pins the framework version the CLI was built from.
+To develop against this checkout instead, scaffold with
+`./bin/axiomod init my-awesome-service --dev` (run from inside the repo, or
+pass `--framework-path`).
 
 ### Running the Server
 
@@ -126,17 +132,21 @@ Dependencies point **inwards**, ensuring your business logic remains independent
 
 ## 🗺️ Roadmap
 
-We have ambitious plans to evolve Axiomod into the standard for enterprise Go development. functionality.
+We have ambitious plans to evolve Axiomod into the standard for enterprise Go development.
 Check out our **[Detailed Roadmap](docs/roadmap.md)** to see what's coming next, including:
 
-- 🏢 **Multi-Tenancy Support**
-- 🔐 **Advanced Security (Vault, mTLS)**
-- 🛠️ **CLI 2.0 (OpenAPI Scaffolding, Monorepos)**
+- 🔐 **Advanced Security (Vault, mTLS, Rate Limiting)**
+- 🛠️ **CLI 2.0 (OpenAPI Scaffolding, Monorepos, Gatekeeper CI)**
 - ⚡ **Event-Driven Patterns (Outbox, DLQ)**
+- 🏢 **Multi-Tenancy 2.0 (data isolation strategies — header-based tenant resolution already ships as the `multitenancy` plugin)**
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Developer Guide](./docs/developer-guide.md) for details on how to set up your environment and submit PRs.
+We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md)
+(workflow + quality gates), our [Code of Conduct](CODE_OF_CONDUCT.md), and
+the [Developer Guide](./docs/developer-guide.md). Security issues: see
+[SECURITY.md](SECURITY.md). Changes are tracked in
+[CHANGELOG.md](CHANGELOG.md).
 
 1. Fork the repo.
 2. Create your feature branch (`git checkout -b feature/amazing-feature`).

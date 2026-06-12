@@ -10,6 +10,7 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/observability"
+	"github.com/axiomod/axiomod/plugins"
 
 	goldap "github.com/go-ldap/ldap/v3"
 	"go.uber.org/zap"
@@ -81,6 +82,7 @@ func (p *Plugin) Name() string {
 //   - groupAttribute (string): attribute holding group memberships, default "memberOf"
 //   - insecureSkipVerify (bool): skip TLS verification (dev only), default false
 func (p *Plugin) Initialize(settings map[string]interface{}, logger *observability.Logger, metrics *observability.Metrics, cfg *config.Config, h *health.Health) error {
+	settings = plugins.NormalizeSettings(settings)
 	p.logger = logger
 	if p.dialer == nil {
 		p.dialer = defaultDialer
@@ -90,24 +92,24 @@ func (p *Plugin) Initialize(settings map[string]interface{}, logger *observabili
 	p.groupAttribute = "memberOf"
 
 	p.url, _ = settings["url"].(string)
-	p.bindDN, _ = settings["bindDn"].(string)
-	p.bindPassword, _ = settings["bindPassword"].(string)
-	p.baseDN, _ = settings["baseDn"].(string)
+	p.bindDN, _ = settings["binddn"].(string)
+	p.bindPassword, _ = settings["bindpassword"].(string)
+	p.baseDN, _ = settings["basedn"].(string)
 
 	if p.url == "" || p.bindDN == "" || p.bindPassword == "" || p.baseDN == "" {
 		return fmt.Errorf("ldap plugin: url, bindDn, bindPassword and baseDn settings are required")
 	}
 
-	if filter, ok := settings["userFilter"].(string); ok && filter != "" {
+	if filter, ok := settings["userfilter"].(string); ok && filter != "" {
 		p.userFilter = filter
 	}
-	if attr, ok := settings["emailAttribute"].(string); ok && attr != "" {
+	if attr, ok := settings["emailattribute"].(string); ok && attr != "" {
 		p.emailAttribute = attr
 	}
-	if attr, ok := settings["groupAttribute"].(string); ok && attr != "" {
+	if attr, ok := settings["groupattribute"].(string); ok && attr != "" {
 		p.groupAttribute = attr
 	}
-	if skip, ok := settings["insecureSkipVerify"].(bool); ok {
+	if skip, ok := settings["insecureskipverify"].(bool); ok {
 		p.insecureSkipVerify = skip
 	}
 

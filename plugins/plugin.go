@@ -3,6 +3,7 @@ package plugins
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/axiomod/axiomod/framework/config"
@@ -18,6 +19,24 @@ var Module = fx.Options(
 	fx.Provide(NewPluginRegistry),
 	fx.Invoke(RegisterPlugins),
 )
+
+// NormalizeSettings returns a copy of a plugin settings map with all keys
+// lowercased (recursively for nested maps). Viper lowercases YAML map keys
+// on unmarshal, so plugins must look settings up by lowercase key; this
+// makes settings maps built in code (e.g. tests) behave identically.
+func NormalizeSettings(settings map[string]interface{}) map[string]interface{} {
+	if settings == nil {
+		return map[string]interface{}{}
+	}
+	normalized := make(map[string]interface{}, len(settings))
+	for key, value := range settings {
+		if nested, ok := value.(map[string]interface{}); ok {
+			value = NormalizeSettings(nested)
+		}
+		normalized[strings.ToLower(key)] = value
+	}
+	return normalized
+}
 
 // RegisterPlugins registers the plugin registry with the fx lifecycle
 func RegisterPlugins(lc fx.Lifecycle, registry *PluginRegistry) {
@@ -141,6 +160,11 @@ func (r *PluginRegistry) StartAll() error {
 		if !ok {
 			pluginSettings = make(map[string]interface{}) // Use empty settings if none found
 		}
+
+		// Viper lowercases YAML map keys on unmarshal, while settings built
+		// in code may use camelCase. Normalize once here so plugins can rely
+		// on lowercase lookups regardless of the source.
+		pluginSettings = NormalizeSettings(pluginSettings)
 
 		if err := plugin.Initialize(pluginSettings, r.logger, r.metrics, r.config, r.health); err != nil {
 			return fmt.Errorf("failed to initialize plugin %s: %w", name, err)

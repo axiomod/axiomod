@@ -1,6 +1,8 @@
 # Axiomod CLI Reference
 
-The `axiomod` CLI is the primary tool for developing, managing, and deploying applications built with the Axiomod framework.
+The `axiomod` CLI is the primary tool for developing, managing, and deploying
+applications built with the Axiomod framework. This reference matches the
+binary's `--help` output; when in doubt, the binary is the source of truth.
 
 ## Installation
 
@@ -11,259 +13,161 @@ make build-cli
 
 ## Global Flags
 
-- `--config`: Path to the configuration file (default: `$HOME/.axiomod.yaml`).
-- `--help`: Show help for command.
+| Flag | Description |
+|---|---|
+| `--config` | Path to the CLI configuration file (default `$HOME/.axiomod.yaml`) |
+| `--help`   | Show help for any command |
 
-## Core Commands
+## Project Scaffolding
 
 ### `init`
 
-Initialize a new Axiomod project with the recommended Clean Architecture structure.
-
 ```bash
-axiomod init [project-name]
+axiomod init my-service
+axiomod init my-service --dev --framework-path /path/to/axiomod
 ```
 
-**Creates:**
+Creates a new project: `cmd/<name>/main.go` (full fx assembly),
+`configs/service_default.yaml`, `Dockerfile`, `Makefile`, `README.md`,
+`.gitignore`, `LICENSE`, and the `internal/`, `tests/`, `migrations/`
+directory skeleton. The generated `go.mod` pins the framework version this
+CLI was built from, so `go mod tidy && go build ./...` works immediately.
 
-- Directory structure (`cmd`, `internal`, `pkg`, `docs`, etc.)
-- `go.mod`
-- Default configuration files
-- `Makefile` and `Dockerfile`
-
-### `config`
-
-Manage configuration settings.
-
-```bash
-axiomod config view   # Display current configuration
-axiomod config check  # Validate configuration file
-```
-
-### `version`
-
-Display version information for the CLI and Framework.
+| Flag | Description |
+|---|---|
+| `--dev` | Develop against a local framework checkout via a `replace` directive |
+| `--framework-path` | Path to the local checkout (with `--dev`; default: discovered by walking up from the current directory) |
 
 ## Code Generation (`generate`)
 
-Scaffold new components to speed up development.
-
-### `module`
-
-Generate a new module structure.
+All generated Go files are gofmt-clean.
 
 ```bash
-axiomod generate module --name=order
+axiomod generate module --name=order            # 8-package Clean Architecture module under examples/<name>/
+axiomod generate service --name=payment --module=billing
+axiomod generate handler --name=order --module=order
 ```
 
-### `service`
-
-Generate a new service layer.
-
-```bash
-axiomod generate service --name=PaymentProcessor --module=billing
-```
-
-### `handler`
-
-Generate HTTP or gRPC handlers.
-
-```bash
-axiomod generate handler --name=GetOrder --type=http --module=order
-```
+| Command | Flags |
+|---|---|
+| `generate module` | `--name` (required) |
+| `generate service` | `--name` (required), `--module` (optional) |
+| `generate handler` | `--name` (required), `--module` (optional, defaults to handler name) |
 
 ## Database Migrations (`migrate`)
 
-Manage database schema changes safely.
-
-### `create`
-
-Create a new migration file pair (up/down).
+Backed by golang-migrate; supports **postgres** and **mysql** (per
+`database.driver`). Migration files live in `./migrations`.
 
 ```bash
-axiomod migrate create add_users_table
-```
-
-### `up`
-
-Apply all pending migrations.
-
-```bash
-axiomod migrate up
-```
-
-### `down`
-
-Rollback the last applied migration.
-
-```bash
-axiomod migrate down
-```
-
-### `force`
-
-Force the migration version (useful for fixing dirty states).
-
-```bash
-axiomod migrate force 20230101000000
-```
-
-### `version`
-
-Print the current migration version.
-
-```bash
-axiomod migrate version
+axiomod migrate create add_users_table   # timestamped .up.sql / .down.sql pair
+axiomod migrate up                       # apply pending migrations (creates the DB if missing)
+axiomod migrate down [N]                 # roll back N steps (default 1)
+axiomod migrate force <version>          # force-set version (dirty-state recovery)
+axiomod migrate version                  # print current version + dirty flag
 ```
 
 ## Policy Management (`policy`)
 
-Manage Casbin RBAC policies and roles.
-
-### `list`
-
-List all current policies.
+Real Casbin operations against the model/policy configured under `casbin:`
+(defaults ship at `configs/rbac_model.conf` / `configs/rbac_policy.csv`).
+Arguments are positional:
 
 ```bash
-axiomod policy list
+axiomod policy list                          # print g (roles) and p (permissions) rules
+axiomod policy add p <sub> <obj> <act>       # add a permission
+axiomod policy add g <user> <role>           # assign a role
+axiomod policy remove p <sub> <obj> <act>    # remove a permission
+axiomod policy remove g <user> <role>        # remove a role assignment
 ```
 
-### `add`
-
-Add a new policy rule.
+## Configuration (`config`)
 
 ```bash
-axiomod policy add --ptype=p --v0=role:admin --v1=resource --v2=action
+axiomod config validate     # YAML-validate configs/, config/, framework/config (incl. configs/env/)
+axiomod config diff dev prod # compare configs/env/<env>.yaml overlays key by key
 ```
 
-### `remove`
-
-Remove an existing policy rule.
-
-```bash
-axiomod policy remove --ptype=p --v0=role:admin --v1=resource --v2=action
-```
+`config validate` exits non-zero when any file fails to parse; `config diff`
+exits non-zero when an environment file cannot be found.
 
 ## Development Workflow
 
-### `build`
-
-Compile the application binary.
-
 ```bash
-axiomod build
+axiomod build               # builds cmd/<module> (or cmd/axiomod-server) to bin/
+axiomod test                # go test -v -cover ./...
+axiomod test ./pkg/...      # specific target
+axiomod test --unit         # only ./tests/unit/...
+axiomod test --integration  # only ./tests/integration/... with RUN_INTEGRATION_TESTS=true
+axiomod lint                # golangci-lint (auto-installs if missing)
+axiomod fmt                 # gofmt -w .
 ```
 
-### `test`
-
-Run unit and integration tests.
-
-```bash
-axiomod test
-axiomod test --unit  # Run only unit tests
-axiomod test --integration # Run only integration tests
-```
-
-### `lint`
-
-Run configured linters (golangci-lint).
-
-```bash
-axiomod lint
-```
-
-### `fmt`
-
-Format code using standard Go tools.
-
-```bash
-axiomod fmt
-```
-
-### `logs`
-
-Tail application logs.
-
-```bash
-axiomod logs --follow
-```
-
-## DevOps & Deployment
+## DevOps
 
 ### `dockerize`
 
-Generate a Dockerfile and build the container image.
-
 ```bash
-axiomod dockerize --tag=v1.0.0
+axiomod dockerize                       # image tag <module-name>:latest
+axiomod dockerize --tag=myapp:v1.0.0
 ```
+
+Generates a multi-stage Dockerfile (Go 1.24 builder, non-root Alpine runtime,
+healthcheck, `configs/` baked in) and runs `docker build`.
 
 ### `deploy`
 
-Deploy the application (requires provider config).
-
 ```bash
-axiomod deploy --env=production
+axiomod deploy dev                       # DRY RUN (default): builds the image, prints [SIMULATED] steps
+axiomod deploy prod --dry-run=false \
+    --registry registry.example.com/team \
+    --manifests deploy/kubernetes        # real docker push + kubectl apply
 ```
 
-### `status`
+| Flag | Description |
+|---|---|
+| `--dry-run` | Default `true`: build only, label remaining steps `[SIMULATED]` |
+| `--registry` | Registry prefix for the push (required with `--dry-run=false`) |
+| `--manifests` | Manifest path for `kubectl apply` (optional) |
 
-Check the status of the running service.
-
-```bash
-axiomod status
-```
-
-### `healthcheck`
-
-Ping the application's liveness and readiness probes.
+### `status` / `healthcheck`
 
 ```bash
-axiomod healthcheck
+axiomod status                           # GET /ready, prints per-component health, exit 1 if unhealthy
+axiomod status --url http://host:8080
+axiomod healthcheck                      # simple GET /health probe
 ```
 
 ## Plugins (`plugin`)
 
-Manage extensions to the framework.
-
 ```bash
-axiomod plugin list
-axiomod plugin install [plugin-name]
-axiomod plugin remove [plugin-name]
+axiomod plugin list                  # scans plugins/ for standalone plugins + lists built-ins
+axiomod plugin install <git-url>     # clones into plugins/<name>; registration is manual
+axiomod plugin remove <name>         # removes plugins/<name>; unregistration is manual
 ```
 
-## Validator (`validator`)
+After install/remove, wire the plugin in `RegisterNewPlugins`
+(`cmd/axiomod-server/register_plugins.go`) and toggle it under
+`plugins.enabled` in `configs/service_default.yaml`.
 
-Enforce architectural rules and code quality.
+## Validators (`validator`)
 
-### `architecture`
+| Command | What it does |
+|---|---|
+| `validator architecture [--config=rules.json]` | AST-based import-rule validation against `architecture-rules.json` (also `make validate-arch`; enforced in CI) |
+| `validator domain` | Cross-domain boundary check |
+| `validator naming [--fix] [--json] [--sql DIR] [--api DIR]` | Go/API/SQL naming conventions |
+| `validator security` | gosec (auto-installs) |
+| `validator static-check` | staticcheck |
+| `validator static-analysis` | go vet + staticcheck + gosec |
+| `validator check-api-spec --spec FILE` | OpenAPI 3.x validation (kin-openapi); invalid specs exit non-zero |
+| `validator check-docs [--since=REF]` | warns when code changed without documentation updates (git-diff heuristic) |
+| `validator standards-check` | runs the full validator suite |
 
-Validate adherence to Clean Architecture dependency rules.
-
-```bash
-axiomod validator architecture
-```
-
-### `naming`
-
-Check naming conventions.
-
-```bash
-axiomod validator naming
-```
-
-### `api-spec`
-
-Validate OpenAPI/Swagger specifications.
+## Misc
 
 ```bash
-axiomod validator api-spec
-```
-
-### `security`
-
-Run security checks (gosec).
-
-```bash
-axiomod validator security
+axiomod version       # version, commit, build date, Go version, platform
+axiomod interactive   # REPL: run any subcommand from an axiomod> prompt
+axiomod completion    # shell completion scripts (bash/zsh/fish/powershell)
 ```

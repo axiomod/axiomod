@@ -183,9 +183,12 @@ func (p *KeycloakPlugin) Initialize(settings map[string]interface{}, logger *obs
 
 // Start starts the plugin
 func (p *KeycloakPlugin) Start() error {
-	issuer, _ := p.config["issuer"].(string)
-	clientID, _ := p.config["client_id"].(string)
-	clientSecret, _ := p.config["client_secret"].(string)
+	// Settings keys arrive lowercased (see NormalizeSettings); accept both
+	// the camelCase convention (issuerUrl/clientId/clientSecret) and the
+	// legacy snake_case keys.
+	issuer := settingString(p.config, "issuerurl", "issuer")
+	clientID := settingString(p.config, "clientid", "client_id")
+	clientSecret := settingString(p.config, "clientsecret", "client_secret")
 
 	if issuer == "" {
 		return fmt.Errorf("keycloak issuer URL is required")
@@ -290,4 +293,15 @@ func (p *CasbinPlugin) Start() error {
 // Stop stops the plugin
 func (p *CasbinPlugin) Stop() error {
 	return nil
+}
+
+// settingString returns the first non-empty string value among the given
+// settings keys (keys are expected lowercase; see NormalizeSettings).
+func settingString(settings map[string]interface{}, keys ...string) string {
+	for _, key := range keys {
+		if v, ok := settings[key].(string); ok && v != "" {
+			return v
+		}
+	}
+	return ""
 }

@@ -45,12 +45,12 @@ Settings for Keycloak are managed via the `KeycloakPlugin`:
 ```yaml
 plugins:
   enabled:
-    - keycloak
+    keycloak: true
   settings:
     keycloak:
-      issuer: "https://keycloak.example.com/realms/master"
-      client_id: "axiomod-client"
-      client_secret: "..."
+      issuerUrl: "https://keycloak.example.com/realms/master"
+      clientId: "axiomod-client"
+      clientSecret: "..."
 ```
 
 ### OIDC Discovery

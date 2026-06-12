@@ -412,15 +412,27 @@ Folded into **AX-003** — listed here only so the wave checklist is complete. N
 
 ## Progress tracker
 
-Copy into the tracking issue; check off per merged PR.
+Status as of 2026-06-12 (branch `claude/hopeful-cray-yoivk5`):
 
-- [ ] **W1:** AX-001 · AX-002 · AX-003 · AX-004 · AX-005 · AX-006 · AX-007 · AX-008
-- [ ] **W2:** AX-010 · AX-011 · AX-012
-- [ ] **W3:** AX-020 · AX-021 · AX-022 · AX-023 · AX-024 · AX-025 · AX-026
-- [ ] **W4:** AX-030 · AX-031 (maintainer)
-- [ ] **W5:** AX-040 · AX-041 · AX-042 · AX-043 · AX-044 · AX-045 · AX-046 · AX-047 · AX-048
-- [ ] **W6:** AX-050 · AX-051 · AX-052 · AX-053 · AX-054 · AX-055 · AX-056 · AX-057
-- [ ] **W7:** AX-060 · AX-061 · AX-062 · AX-063 · AX-064 · AX-066
-- [ ] **W8 (P2):** AX-070 · AX-071 · AX-072 · AX-073 · AX-074
+- [x] **W1:** AX-001 · AX-002 · AX-003 · AX-004 · AX-005 · AX-006 · AX-007 · AX-008 — all done
+- [x] **W2:** AX-010 · AX-011 · AX-012 — done; validator: 94 violations → 0, enforced in CI
+- [x] **W3:** AX-020 · AX-021 · AX-022 · AX-023 · AX-024 · AX-025 · AX-026 — done; Ent is the default ORM (`database.orm: ent|sql`)
+- [x] **W4:** AX-030 done · **AX-031 remains maintainer-gated** (tag v0.3.0 per release checklist)
+- [x] **W5:** AX-040 · AX-041 · AX-042 (logs removed) · AX-043 · AX-044 · AX-045 · AX-046 · AX-047 · AX-048 — done
+- [x] **W6:** AX-050 · AX-051 · AX-052 · AX-053 · AX-054 · AX-055 · AX-056 · AX-057 — done
+- [x] **W7:** AX-060 (errors 94% cov) · AX-062 (gate 50%) · AX-063 · AX-064 · AX-066 — done · **AX-061 partially done** (Ent repo + example_plugin tests added; database/health/circuitbreaker/validation/worker backfill still open)
+- [ ] **W8 (P2):** ~~AX-070~~ (superseded by AX-026, done) · AX-071 · AX-072 · AX-073 · AX-074 — not scheduled
 
-**Launch gate:** all of W1–W4 merged + AX-031 tagged + `docs/readiness-assessment.md` (AX-056) regenerated green.
+**Additional fixes discovered during execution** (not in the original plan):
+- SQL drivers were registered only in the migrate CLI — the server binary
+  could not open any database; now registered in `framework/database`.
+- `server.Module`/`grpc.Module` did not provide `*fiber.App`/`*grpc.Server`,
+  so the documented domain-wiring pattern could never resolve; fixed.
+- Plugin settings keys are now normalized (Viper lowercases YAML map keys;
+  camelCase settings like `elasticsearchUrl`, `bindDn`, `clientId` were
+  silently ignored at runtime); keycloak accepts camelCase + legacy keys.
+- OIDC made opt-in (idle when `issuerUrl` empty) instead of erroring at boot.
+
+**Launch gate:** W1–W4 merged ✅ + AX-031 tagged (pending, maintainer) +
+`docs/readiness-assessment.md` regenerated ✅ (Releases row stays 🔴 until
+the tag exists).

@@ -58,7 +58,7 @@ The binary will be available at `./bin/axiomod`.
 - **Validation**: Run code validators to ensure architecture and naming standards.
 
   ```bash
-  ./bin/axiomod validator run
+  ./bin/axiomod validator architecture
   ```
 
 ## 3. Development Workflow
