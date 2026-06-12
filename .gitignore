@@ -63,3 +63,4 @@ tmp/
 # Agent
 .agent/
 agent-tasks/
+.claude/worktrees/
