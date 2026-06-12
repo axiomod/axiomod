@@ -3,7 +3,7 @@
 **Date:** 2026-06-12
 **Scope:** Every feature claim in `README.md` and `docs/` verified against the codebase on branch `claude/hopeful-cray-yoivk5` (HEAD `eb9ac98`), plus a repo/structure assessment against the bar set by Spring Boot, Laravel, .NET, and Next.js.
 **Method:** Full read of all 29 docs files; source audit of all 22 `framework/`+`platform/` packages, all 13 plugins, all 33 CLI commands; empirical verification: `go build ./...`, `go vet`, `gofmt -l`, `go test -race ./...`, CLI binary exercised (`--help`, `init`, `validator architecture`, flag checks), server booted and observed, scaffolded project compiled.
-**Remediation:** Every finding below is mapped to an executable task in [`docs/launch-task-plan.md`](./launch-task-plan.md).
+**Remediation:** Every finding below is mapped to an executable task in [`launch-task-plan.md`](./launch-task-plan.md).
 
 ---
 

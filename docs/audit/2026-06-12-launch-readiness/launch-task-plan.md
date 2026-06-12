@@ -1,7 +1,7 @@
 # Axiomod Launch-Readiness Task Plan
 
 **Audience:** AI coding agents (Claude Code or similar) executing tasks autonomously.
-**Source:** `docs/feature-implementation-audit.md` (2026-06-12). Each task references the audit finding it resolves.
+**Source:** [`feature-implementation-audit.md`](./feature-implementation-audit.md) (audit-id `2026-06-12-launch-readiness`). Each task references the audit finding it resolves.
 **Goal:** Close every P0/P1 gap between documentation and implementation before public launch.
 
 ---
@@ -144,7 +144,7 @@ Waves are ordered to minimize rebase pain (the Wave 2 refactor touches ~30 files
 **Problem:** The validator flags imports the docs explicitly allow (e.g. `plugins/plugin.go:10: plugins imports platform/observability (not allowed)`), and `cmd/*` (18 violations) has no sensible rule. Rules also reference nonexistent `platform/ent/{schema,migrate}`.
 **Steps:**
 1. Encode: `framework/*` → framework-internal only; `platform/*` → `framework/*`; `plugins/*` → `framework/*` + `platform/*`; `cmd/*` → anything (entry points); `examples/<domain>` internal layer rules unchanged; cross-domain still forbidden.
-2. Remove `platform/ent/*` exceptions (reintroduce with AX-070) — coordinate with the same references in `.claude/CLAUDE.md` and `.claude/rules/02-architecture.md`.
+2. Keep the `platform/ent/{schema,migrate}` exceptions and the "repositories may import platform/ent" pattern rule — `platform/ent` becomes real in AX-026.
 3. Keep `_test.go`, `mock_`, `testdata` exceptions.
 **Acceptance:** `./bin/axiomod validator architecture` exits 0 on the repo. VERIFY EMPIRICALLY (paste the summary: 0 violations).
 
@@ -210,11 +210,19 @@ Waves are ordered to minimize rebase pain (the Wave 2 refactor touches ~30 files
 **Steps:** Replace with `framework/middleware.AuthMiddleware` (real JWT validation, claims in `c.Locals`) injected via the module, or validate via `auth.JWTService` inside the example middleware. Update `module.go` wiring and tests (generate a token with the test secret).
 **Acceptance:** Request without valid JWT → 401; with valid token → 2xx; test proves both.
 
-### AX-026 · Stop pretending the SQL repository is Ent
-**Priority:** P0 · **Size:** S · **Depends:** — (coordinate with AX-011 on rules text)
+### AX-026 · Ent as the framework's default ORM (config-selectable raw SQL)
+**Priority:** P0 · **Size:** L · **Depends:** AX-010, AX-023
+**Directive change (2026-06-12):** originally this task stripped the fake Ent repository; per maintainer direction it now does the opposite — implement Ent **for real** as the framework default, keeping plain `database/sql` available behind a config switch. Supersedes AX-070.
 **Problem:** `example_ent_repository.go` is raw `database/sql` with comments admitting it isn't Ent; `platform/ent` referenced in rules/CLAUDE.md doesn't exist (audit B6).
-**Steps:** Rename file/type to `example_sql_repository.go` / `ExampleSQLRepository`; rewrite comments honestly ("plain database/sql implementation; see roadmap for Ent"); purge `platform/ent` mentions from `.claude/CLAUDE.md`, `.claude/rules/02-architecture.md`, `architecture-rules.json` (if not already via AX-011). Add a note in `docs/roadmap/enterprise-readiness.md` that Ent integration is tracked (AX-070).
-**Acceptance:** `grep -rni "ent" examples/ --include='*.go'` shows no claim of Ent ORM usage; build/tests green.
+**Steps:**
+1. Add `entgo.io/ent` to `go.mod`; create `platform/ent/schema/example.go` (fields mirroring `entity.Example`: string id, name, description, value type/count, JSON tags, timestamps) and run ent codegen into `platform/ent/` (`go generate ./platform/ent/...`).
+2. Provide a client constructor (`platform/ent/client.go`): wrap an existing `*sql.DB` from `framework/database` via `entsql.OpenDB(dialect, db)` so pooling/metrics/slow-query plumbing is reused.
+3. New config key `database.orm: "ent" | "sql"` (**default `ent`**) — add `ORM` field to `DatabaseConfig` in `framework/config/types.go`, default it in `setDefaults`, document in `configs/service_default.yaml`.
+4. Rewrite `examples/example/infrastructure/persistence/example_ent_repository.go` as a real Ent implementation of `repository.ExampleRepository`; keep the raw-SQL implementation as `example_sql_repository.go` (honest comments).
+5. Repository selection in `examples/example/module.go`: memory when no DB plugin is enabled (server must boot with zero infra); when postgres/mysql is enabled choose Ent vs SQL by `database.orm`.
+6. Restore/keep `platform/ent/schema` + `platform/ent/migrate` exceptions in `architecture-rules.json` and the "repositories may import platform/ent" pattern rule; keep `.claude` references accurate.
+7. Tests: Ent repository CRUD against an in-memory SQLite driver if feasible without cgo (`modernc.org/sqlite`), otherwise gate behind `RUN_INTEGRATION_TESTS`; unit-test the selection logic.
+**Acceptance:** `database.orm` defaults to `ent`; with `orm: sql` the SQL repository is selected (asserted by test); server still boots with no DB configured; build/tests green.
 
 ---
 
@@ -336,7 +344,7 @@ Waves are ordered to minimize rebase pain (the Wave 2 refactor touches ~30 files
 
 ### AX-056 · Rewrite `docs/readiness-assessment.md` honestly
 **Priority:** P1 · **Size:** S · **Depends:** end of Wave 3 (so the rewrite reflects fixes)
-**Steps:** Re-run the audit checklist (build/test/boot/validator/quick-start) and rewrite statuses with evidence per row; downgrade anything not verified; date it; link `docs/feature-implementation-audit.md` as methodology. Keep 🟢 only for items with a passing verification command listed inline.
+**Steps:** Re-run the audit checklist (build/test/boot/validator/quick-start) and rewrite statuses with evidence per row; downgrade anything not verified; date it; link `docs/audit/2026-06-12-launch-readiness/feature-implementation-audit.md` as methodology. Keep 🟢 only for items with a passing verification command listed inline.
 **Acceptance:** Every 🟢 row cites a command an evaluator can run.
 
 ### AX-057 · Root `README.md` polish
@@ -394,7 +402,7 @@ Folded into **AX-003** — listed here only so the wave checklist is complete. N
 
 | ID | Task | Notes |
 |---|---|---|
-| **AX-070** | Real Ent integration: `platform/ent` schema for the example domain, generated client, `ExampleEntRepository` implementing `repository.ExampleRepository`, restore the rules exceptions removed in AX-011, migration story alongside golang-migrate. | L. Gate live-DB tests behind `RUN_INTEGRATION_TESTS`. |
+| **AX-070** | ~~Real Ent integration~~ **Superseded by AX-026** (pulled forward to Wave 3 per maintainer directive). | — |
 | **AX-071** | OpenAPI story: swaggo annotations on example handlers, `make openapi` target, publish `api/openapi.yaml`, validate in CI via AX-043's validator. Pairs with roadmap "generate from-spec". | M |
 | **AX-072** | Generators emit tests: `generate module/handler/service` scaffold matching `_test.go` files (table-driven templates). | M |
 | **AX-073** | Helm chart (`deploy/helm/axiomod/`) with values for ports/probes/secrets; docs site (mkdocs-material or Docusaurus) publishing `docs/` via GitHub Pages. | L |
