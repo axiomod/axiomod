@@ -19,8 +19,10 @@ The configuration consists of:
 ```
 .claude/
 ├── CLAUDE.md                          # Project instructions (loaded every session)
-├── settings.json                      # Shared permissions (committed to git)
+├── settings.json                      # Shared permissions + hooks (committed to git)
 ├── settings.local.json                # Personal permissions (NOT committed)
+├── hooks/                             # Hook scripts wired up in settings.json
+│   └── enforce-version-sync.sh       # Blocks `git tag v*` if version files are out of sync
 ├── rules/                             # Auto-loaded rule files
 │   ├── 01-coding-style.md            # Naming conventions, imports, logging
 │   ├── 02-architecture.md            # Layer structure, import rules
@@ -328,6 +330,33 @@ The `deny` list blocks:
 ```
 
 Any operation not in the `allow` list prompts the user for confirmation before executing. Any operation in the `deny` list is blocked entirely.
+
+### Hooks
+
+`settings.json` also wires up a `PreToolUse` hook that runs before every Bash command:
+
+```json
+"hooks": {
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/hooks/enforce-version-sync.sh"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The script `.claude/hooks/enforce-version-sync.sh` only intercepts `git tag v*` commands and blocks them (exit code 2) if:
+
+- The Makefile `VERSION` does not match the tag, or
+- `docs/release-notes/v<X.Y.Z>.md` does not exist
+
+All other commands pass through untouched. To fix a blocked tag, run `./scripts/bump-version.sh v<X.Y.Z>`, which syncs the version across the Makefile, `.claude/CLAUDE.md`, `.claude/rules/15-ci-build.md`, and the release notes, then commit before tagging. The `/release` skill uses this workflow.
 
 ## 8. Local Settings (`.claude/settings.local.json`)
 
