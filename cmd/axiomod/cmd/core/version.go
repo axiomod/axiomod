@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/axiomod/axiomod/framework/version"
+
 	"github.com/spf13/cobra"
 )
 
@@ -18,8 +20,9 @@ Example:
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Axiomod Framework")
-		fmt.Println("Version: 1.0.0")
-		fmt.Println("Build Date: 2025-04-28")
+		fmt.Println("Version:", version.Version)
+		fmt.Println("Git Commit:", version.GitCommit)
+		fmt.Println("Build Date:", version.BuildDate)
 		fmt.Println("Go Version:", runtime.Version())
 		fmt.Println("OS/Arch:", runtime.GOOS+"/"+runtime.GOARCH)
 	},
