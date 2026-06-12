@@ -15,9 +15,10 @@ per release) and must match `VERSION` in the `Makefile`.
 ## 2. Version
 
 - [ ] Pick the next semantic version `vX.Y.Z`.
-- [ ] Update `VERSION` in `Makefile` and `ARG VERSION` in `Dockerfile`.
-- [ ] Update the version reference in `.claude/CLAUDE.md`.
-- [ ] Write `docs/release-notes/vX.Y.Z.md` describing the changes.
+- [ ] Run `./scripts/bump-version.sh vX.Y.Z` (updates `Makefile`,
+      `.claude/CLAUDE.md`, the CI/build rule, and seeds the release-note file).
+- [ ] Update `ARG VERSION` in `Dockerfile`.
+- [ ] Complete `docs/release-notes/vX.Y.Z.md` describing the changes.
 
 ## 3. Tag & Push
 
@@ -30,11 +31,20 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-## 4. GitHub Release
+## 4. Automated Release (GoReleaser)
 
-1. Go to the GitHub repository.
-2. Click **Releases** > **Draft a new release**.
-3. Choose tag `vX.Y.Z`.
-4. Title: `vX.Y.Z - <short summary>`.
-5. Description: copy content from `docs/release-notes/vX.Y.Z.md`.
-6. Attach binaries (if applicable).
+Pushing the tag triggers `.github/workflows/release.yml`, which runs the test
+suite and then GoReleaser (`.goreleaser.yaml`):
+
+- builds `axiomod` and `axiomod-server` for linux/darwin × amd64/arm64 with
+  version ldflags,
+- publishes the GitHub Release with archives and `checksums.txt`,
+- generates a changelog from commit messages.
+
+After the workflow finishes:
+
+- [ ] Verify the release page lists all eight artifacts plus checksums.
+- [ ] Verify `GOPROXY=direct go get github.com/axiomod/axiomod@vX.Y.Z`
+      resolves from a scratch module.
+- [ ] Paste the highlights from `docs/release-notes/vX.Y.Z.md` into the
+      release description.

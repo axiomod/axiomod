@@ -1,0 +1,66 @@
+version: 2
+
+project_name: axiomod
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: axiomod
+    main: ./cmd/axiomod
+    binary: axiomod
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/axiomod/axiomod/framework/version.Version={{.Version}}
+      - -X github.com/axiomod/axiomod/framework/version.GitCommit={{.FullCommit}}
+      - -X github.com/axiomod/axiomod/framework/version.BuildDate={{.Date}}
+
+  - id: axiomod-server
+    main: ./cmd/axiomod-server
+    binary: axiomod-server
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/axiomod/axiomod/framework/version.Version={{.Version}}
+      - -X github.com/axiomod/axiomod/framework/version.GitCommit={{.FullCommit}}
+      - -X github.com/axiomod/axiomod/framework/version.BuildDate={{.Date}}
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+      - configs/service_default.yaml
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  draft: false
+  prerelease: auto
+  footer: |
+    ## Installation
+
+    ```bash
+    go get github.com/axiomod/axiomod@{{ .Tag }}
+    ```
+
+    See `docs/release-notes/{{ .Tag }}.md` for details.
