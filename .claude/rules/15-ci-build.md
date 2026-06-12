@@ -15,7 +15,7 @@ make clean          # go clean && rm -rf bin/
 
 ## Build Variables (injected via ldflags)
 
-- `framework/version.Version` = v1.4.0
+- `framework/version.Version` = v0.2.0
 - `framework/version.GitCommit` = git rev-parse HEAD
 - `framework/version.BuildDate` = UTC timestamp
 

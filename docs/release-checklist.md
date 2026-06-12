@@ -1,60 +1,40 @@
 # Axiomod Release Checklist
 
-Follow this checklist to push the initial commit and create the first release of the Axiomod framework.
+Follow this checklist to cut a new release of the Axiomod framework.
+The current released version is tracked in `docs/release-notes/` (one file
+per release) and must match `VERSION` in the `Makefile`.
 
-## 1. Local Preparation
+## 1. Verify
 
-- [ ] **Verify Git Ignore**: Ensure `.gitignore` exists and covers secrets/binaries.
-- [ ] **Clean Dependencies**: Run `go mod tidy` to remove unused dependencies.
-- [ ] **Verify Build**: Run `make build` to ensure the binary compiles.
-- [ ] **Run Tests**: Run `make test` to ensure all tests pass.
-- [ ] **Lint Code**: Run `make lint` to check for style issues.
+- [ ] **Clean Dependencies**: Run `go mod tidy` and confirm no diff.
+- [ ] **Verify Build**: Run `make build` and `make build-cli`.
+- [ ] **Run Tests**: Run `go test -race ./...` — all green.
+- [ ] **Lint Code**: Run `make lint` — no findings.
+- [ ] **Architecture**: Run `axiomod validator architecture` — no violations.
 
-## 2. Git Initialization (First Time Only)
+## 2. Version
 
-```bash
-# Initialize repository
-git init
+- [ ] Pick the next semantic version `vX.Y.Z`.
+- [ ] Update `VERSION` in `Makefile` and `ARG VERSION` in `Dockerfile`.
+- [ ] Update the version reference in `.claude/CLAUDE.md`.
+- [ ] Write `docs/release-notes/vX.Y.Z.md` describing the changes.
 
-# Add all files
-git add .
-
-# Create initial commit
-git commit -m "feat: initial commit of axiomod framework v1.0.0"
-
-# Rename branch to main
-git branch -M main
-```
-
-## 3. Remote Configuration
-
-- [ ] **Create Repository**: Create a new public/private repository on GitHub named `axiomod`.
-- [ ] **Add Remote**:
+## 3. Tag & Push
 
 ```bash
-git remote add origin https://github.com/axiomod/axiomod.git
+git add -A
+git commit -m "Release vX.Y.Z"
+git push origin main
+
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-## 4. Push & Release
-
-- [ ] **Push Code**:
-
-```bash
-git push -u origin main
-```
-
-- [ ] **Tag Version**:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-## 5. GitHub Release (Optional but Recommended)
+## 4. GitHub Release
 
 1. Go to the GitHub repository.
 2. Click **Releases** > **Draft a new release**.
-3. Choose tag `v1.0.0`.
-4. Title: `v1.0.0 - Enterprise Ready`.
-5. Description: Copy content from `readiness_assessment.md` or `metrics`.
+3. Choose tag `vX.Y.Z`.
+4. Title: `vX.Y.Z - <short summary>`.
+5. Description: copy content from `docs/release-notes/vX.Y.Z.md`.
 6. Attach binaries (if applicable).

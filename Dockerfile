@@ -12,7 +12,7 @@ RUN go mod download
 
 COPY . .
 
-ARG VERSION=v1.4.0
+ARG VERSION=v0.2.0
 RUN COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
     DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') && \
     CGO_ENABLED=0 go build \
