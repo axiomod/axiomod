@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: axiomod
+  labels:
+    app: axiomod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: axiomod
+  template:
+    metadata:
+      labels:
+        app: axiomod
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: axiomod
+          image: axiomod/server:latest
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: grpc
+              containerPort: 9090
+          env:
+            # Environment overrides use the APP_ prefix; Viper key dots
+            # become underscores (database.password -> APP_DATABASE_PASSWORD).
+            - name: APP_APP_ENVIRONMENT
+              value: "production"
+            - name: APP_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: axiomod-secrets
+                  key: DB_PASSWORD
+            - name: APP_AUTH_JWT_SECRETKEY
+              valueFrom:
+                secretKeyRef:
+                  name: axiomod-secrets
+                  key: JWT_SECRET
+          volumeMounts:
+            - name: config
+              mountPath: /app/configs
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      volumes:
+        - name: config
+          configMap:
+            name: axiomod-config

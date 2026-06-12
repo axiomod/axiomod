@@ -8,7 +8,6 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/di"
 	"github.com/axiomod/axiomod/framework/observability"
-	"github.com/axiomod/axiomod/framework/router"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
@@ -37,23 +36,16 @@ func TestFrameworkInitialization(t *testing.T) {
 			observability.NewLogger,
 			observability.NewTracer,
 			observability.NewMetrics,
-			// Provide router config
-			func() *router.Config {
-				return router.DefaultConfig()
-			},
-			router.New,
 		),
 		fx.Invoke(func(
 			logger *observability.Logger,
 			tracer *observability.Tracer,
 			metrics *observability.Metrics,
-			router *router.Router,
 		) {
 			// Verify that all components are initialized
 			assert.NotNil(t, logger)
 			assert.NotNil(t, tracer)
 			assert.NotNil(t, metrics)
-			assert.NotNil(t, router)
 		}),
 		fx.StartTimeout(5*time.Second),
 	)

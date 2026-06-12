@@ -46,7 +46,9 @@ func TestValidator(t *testing.T) {
 
 ## 4. Code Coverage
 
-We target **>80% code coverage** for all core framework modules.
+We target **>80% code coverage** for core framework modules. CI currently
+enforces a repository-wide floor of **50%** (see `.github/workflows/ci.yml`),
+ratcheting upward as coverage grows.
 
 ### Running Coverage Reports
 
@@ -62,8 +64,8 @@ go tool cover -html=coverage.out
 
 The CI pipeline automatically runs all tests on every push and merge request.
 
-- **Go Version Matrix**: Tests are executed against multiple supported Go versions (1.24, 1.25).
-- **Coverage Gates**: PRs are blocked if coverage drops below the 80% threshold.
+- **Go Version**: Tests run against the Go version pinned in `go.mod`.
+- **Coverage Gate**: PRs are blocked if total coverage drops below the 50% threshold.
 - **Static Analysis**: `go vet`, `staticcheck`, and `gosec` are run as part of the validation suite.
 
 ## 6. Project Integration Tests
