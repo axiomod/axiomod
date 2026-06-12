@@ -111,8 +111,13 @@ func initTracer(cfg *config.Config) (*sdktrace.TracerProvider, error) {
 	case "jaeger":
 		exporter, err = jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(cfg.Observability.TracingURL)))
 	case "otlp":
-		// Assume OTLP over GRPC for now, can be made configurable
-		exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithEndpoint(cfg.Observability.TracingURL), otlptracegrpc.WithInsecure())
+		// OTLP over gRPC. TLS is the default; plaintext requires explicit
+		// opt-in via observability.tracingInsecure.
+		opts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(cfg.Observability.TracingURL)}
+		if cfg.Observability.TracingInsecure {
+			opts = append(opts, otlptracegrpc.WithInsecure())
+		}
+		exporter, err = otlptracegrpc.New(ctx, opts...)
 	case "stdout":
 		exporter, err = stdouttrace.New(stdouttrace.WithPrettyPrint())
 	default:

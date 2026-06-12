@@ -10,7 +10,7 @@ services:
     environment:
       - APP_ENV=local
       - DB_HOST=postgres
-      - DB_PASSWORD=password
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-password}
       - KAFKA_BROKERS=kafka:9092
       - REDIS_HOST=redis
     depends_on:
@@ -21,8 +21,8 @@ services:
   postgres:
     image: postgres:14-alpine
     environment:
-      POSTGRES_USER: axiomod
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${POSTGRES_USER:-axiomod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: axiomod
     ports:
       - "5432:5432"

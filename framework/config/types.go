@@ -54,6 +54,7 @@ type ObservabilityConfig struct {
 	TracingEnabled      bool
 	TracingExporterType string // "otlp", "jaeger", "stdout"
 	TracingURL          string
+	TracingInsecure     bool // allow plaintext (non-TLS) OTLP export; defaults to false
 	TracingSamplerRatio float64
 	MetricsEnabled      bool
 	MetricsPort         int

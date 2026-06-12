@@ -127,11 +127,22 @@ func (p *JWTPlugin) Initialize(settings map[string]interface{}, logger *observab
 
 // Start starts the plugin
 func (p *JWTPlugin) Start() error {
-	secret, _ := p.config["secret"].(string)
-	durationStr, _ := p.config["duration"].(string)
-	duration, _ := time.ParseDuration(durationStr)
-	if duration == 0 {
-		duration = 24 * time.Hour
+	secret, ok := p.config["secret"].(string)
+	if !ok || secret == "" {
+		// Fall back to the central auth config if the plugin settings omit it.
+		secret = p.cfg.Auth.JWT.SecretKey
+	}
+	if err := auth.ValidateSecretKey(secret); err != nil {
+		return fmt.Errorf("jwt plugin: %w", err)
+	}
+
+	duration := 24 * time.Hour
+	if durationStr, ok := p.config["duration"].(string); ok && durationStr != "" {
+		parsed, err := time.ParseDuration(durationStr)
+		if err != nil {
+			return fmt.Errorf("jwt plugin: invalid duration %q: %w", durationStr, err)
+		}
+		duration = parsed
 	}
 
 	p.service = auth.NewJWTService(secret, duration)
@@ -146,11 +157,13 @@ func (p *JWTPlugin) Stop() error {
 
 // KeycloakPlugin implements the Keycloak authentication plugin
 type KeycloakPlugin struct {
-	config  map[string]interface{}
-	service *auth.OIDCService
-	logger  *observability.Logger
-	metrics *observability.Metrics
-	cfg     *config.Config
+	config         map[string]interface{}
+	service        *auth.OIDCService
+	logger         *observability.Logger
+	metrics        *observability.Metrics
+	cfg            *config.Config
+	discoverCancel context.CancelFunc
+	discoverDone   chan struct{}
 }
 
 // Name returns the name of the plugin
@@ -183,12 +196,14 @@ func (p *KeycloakPlugin) Start() error {
 		ClientSecret: clientSecret,
 	}, p.logger)
 
-	// Perform discovery in a separate goroutine or background to avoid blocking startup if Keycloak is down
-	// But OIDC standard usually requires discovery to be successful.
-	// For this framework, we attempt discovery on start.
+	// Perform discovery in the background to avoid blocking startup if
+	// Keycloak is down. The goroutine is cancellable from Stop().
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	p.discoverCancel = cancel
+	p.discoverDone = make(chan struct{})
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
+		defer close(p.discoverDone)
 		if err := p.service.Discover(ctx); err != nil {
 			p.logger.Error("Failed to discover Keycloak OIDC configuration", zap.Error(err))
 		} else {
@@ -199,8 +214,16 @@ func (p *KeycloakPlugin) Start() error {
 	return nil
 }
 
-// Stop stops the plugin
+// Stop stops the plugin, cancelling any in-flight discovery and the
+// OIDC service's background refresh loop.
 func (p *KeycloakPlugin) Stop() error {
+	if p.discoverCancel != nil {
+		p.discoverCancel()
+		<-p.discoverDone
+	}
+	if p.service != nil {
+		p.service.Stop()
+	}
 	return nil
 }
 

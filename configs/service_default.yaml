@@ -9,7 +9,8 @@ observability:
   logFormat: "json"
   tracingEnabled: false
   tracingExporterType: "jaeger" # Options: jaeger, otlp, stdout
-  tracingURL: "http://localhost:14268/api/traces"
+  tracingUrl: "http://localhost:14268/api/traces"
+  tracingInsecure: true # local dev only -- keep false (TLS) in production
   tracingSamplerRatio: 1.0
   metricsEnabled: true
   metricsPort: 9091
@@ -44,7 +45,9 @@ auth:
     clientSecret: "client-secret"
     jwksCacheTtl: 60 # minutes
   jwt:
-    secretKey: "your-256-bit-secret"
+    # DEV PLACEHOLDER -- must be overridden in every deployment, e.g. via
+    # APP_AUTH_JWT_SECRETKEY. Minimum 32 bytes; startup fails otherwise.
+    secretKey: "dev-only-insecure-secret-change-me-now"
     tokenDuration: 60 # minutes
 
 casbin:

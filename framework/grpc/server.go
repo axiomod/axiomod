@@ -153,10 +153,15 @@ func NewServer(logger *observability.Logger, options *ServerOptions, metricsInte
 	}, nil
 }
 
-// Start starts the gRPC server
+// Start starts the gRPC server. It blocks until the server stops and logs
+// any error that terminates the serve loop.
 func (s *Server) Start() error {
 	s.logger.Info("Starting gRPC server", zap.String("address", s.listener.Addr().String()))
-	return s.server.Serve(s.listener)
+	if err := s.server.Serve(s.listener); err != nil {
+		s.logger.Error("gRPC server terminated with error", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 // Stop stops the gRPC server

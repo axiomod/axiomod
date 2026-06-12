@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -83,12 +84,17 @@ func NewHTTPServer(cfg *config.Config, obsLogger *observability.Logger, metrics 
 func RegisterHTTPServer(lc fx.Lifecycle, server *HTTPServer) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			// Start the server in a goroutine
+			// Bind synchronously so that startup fails fast if the port is
+			// unavailable, then serve in the background.
+			addr := fmt.Sprintf("%s:%d", server.Config.HTTP.Host, server.Config.HTTP.Port)
+			ln, err := net.Listen("tcp", addr)
+			if err != nil {
+				return fmt.Errorf("failed to bind HTTP server on %s: %w", addr, err)
+			}
+			server.Logger.Info("Starting HTTP server", zap.String("address", addr))
 			go func() {
-				addr := fmt.Sprintf("%s:%d", server.Config.HTTP.Host, server.Config.HTTP.Port)
-				server.Logger.Info("Starting HTTP server", zap.String("address", addr))
-				if err := server.App.Listen(addr); err != nil && err != http.ErrServerClosed {
-					server.Logger.Error("Failed to start HTTP server", zap.Error(err))
+				if err := server.App.Listener(ln); err != nil && err != http.ErrServerClosed {
+					server.Logger.Error("HTTP server terminated with error", zap.Error(err))
 				}
 			}()
 			return nil
@@ -104,10 +110,11 @@ func RegisterHTTPServer(lc fx.Lifecycle, server *HTTPServer) {
 func RegisterGRPCServer(lc fx.Lifecycle, server *grpc_pkg.Server) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
+			// The listener is already bound in grpc.NewServer, so bind
+			// failures surface during construction. Serve errors are logged
+			// inside Server.Start.
 			go func() {
-				if err := server.Start(); err != nil && err != http.ErrServerClosed {
-					// logger is internal to server
-				}
+				_ = server.Start()
 			}()
 			return nil
 		},
