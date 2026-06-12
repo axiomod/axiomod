@@ -16,8 +16,7 @@ var Module = fx.Options(
 func RegisterWorker(lc fx.Lifecycle, w *Worker) {
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			w.StopAll()
-			return nil
+			return w.Shutdown(ctx)
 		},
 	})
 }

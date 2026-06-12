@@ -31,6 +31,7 @@ type Worker struct {
 	jobs       map[string]*Job
 	cancelFunc map[string]context.CancelFunc
 	mu         sync.RWMutex
+	wg         sync.WaitGroup
 	logger     *observability.Logger
 }
 
@@ -81,7 +82,11 @@ func (w *Worker) StartJob(jobID string) error {
 	w.cancelFunc[jobID] = cancel
 
 	// Start the job
-	go w.runJob(ctx, job)
+	w.wg.Add(1)
+	go func() {
+		defer w.wg.Done()
+		w.runJob(ctx, job)
+	}()
 
 	w.logger.Info("Started job", zap.String("id", job.ID), zap.String("name", job.Name))
 	return nil
@@ -114,6 +119,25 @@ func (w *Worker) StopAll() {
 		cancel()
 		delete(w.cancelFunc, jobID)
 		w.logger.Info("Stopped job", zap.String("id", jobID))
+	}
+}
+
+// Shutdown stops all jobs and waits for running job goroutines to exit.
+// It returns the context's error if the context expires before all jobs finish.
+func (w *Worker) Shutdown(ctx context.Context) error {
+	w.StopAll()
+
+	done := make(chan struct{})
+	go func() {
+		w.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }
 
