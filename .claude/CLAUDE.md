@@ -81,7 +81,7 @@ type Plugin interface {
 }
 ```
 
-Register via `PluginRegistry.Register(&YourPlugin{})`. Built-in: mysql, postgresql, jwt, keycloak, casdoor, casbin. Enable/disable via `configs/service_default.yaml` under `plugins.enabled`.
+Register via `PluginRegistry.Register(&YourPlugin{})`. Built-in: mysql, postgres, jwt, keycloak, casdoor, casbin. Extended: ldap, saml, multitenancy, auditing, elk, redis, kafka. Enable/disable via `configs/service_default.yaml` under `plugins.enabled`.
 
 ## Config System
 
