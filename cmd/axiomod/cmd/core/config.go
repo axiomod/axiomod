@@ -2,6 +2,8 @@ package core
 
 import (
 	"github.com/spf13/cobra"
+
+	configcmd "github.com/axiomod/axiomod/cmd/axiomod/cmd/core/config"
 )
 
 // configCmd represents the config command
@@ -15,7 +17,9 @@ Examples:
   axiomod config diff dev prod`,
 }
 
-// NewConfigCmd returns the config command
+// NewConfigCmd returns the config command with its subcommands attached.
 func NewConfigCmd() *cobra.Command {
+	configCmd.AddCommand(configcmd.NewConfigValidateCmd())
+	configCmd.AddCommand(configcmd.NewConfigDiffCmd())
 	return configCmd
 }

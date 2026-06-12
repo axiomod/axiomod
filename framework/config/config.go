@@ -75,16 +75,21 @@ func NewViperProvider(configPath string, configName string, configType string) (
 	if configPath != "" {
 		v.AddConfigPath(configPath)
 	} else {
-		// Default paths relative to current execution
-		v.AddConfigPath(".")            // Current directory
-		v.AddConfigPath("config")       // ./config
-		v.AddConfigPath("../config")    // ../config (useful for cmd/*)
-		v.AddConfigPath("../../config") // ../../config (useful for cmd/subcmd/*)
+		// Default paths relative to current execution. "configs" is the
+		// canonical location shipped with the repository and scaffolded
+		// projects; "config" is kept for backwards compatibility.
+		v.AddConfigPath(".")             // Current directory
+		v.AddConfigPath("configs")       // ./configs (canonical)
+		v.AddConfigPath("config")        // ./config
+		v.AddConfigPath("../configs")    // ../configs (useful for cmd/*)
+		v.AddConfigPath("../config")     // ../config
+		v.AddConfigPath("../../configs") // ../../configs (useful for cmd/subcmd/*)
+		v.AddConfigPath("../../config")  // ../../config
 
-		// Paths relative to potential project root locations
-		v.AddConfigPath("framework/config")       // ./framework/config
-		v.AddConfigPath("../framework/config")    // ../framework/config
-		v.AddConfigPath("../../framework/config") // ../../framework/config (often works for tests in cmd/*)
+		// Legacy project-root locations, kept for backwards compatibility
+		v.AddConfigPath("framework/config")
+		v.AddConfigPath("../framework/config")
+		v.AddConfigPath("../../framework/config")
 
 		// Absolute paths
 		v.AddConfigPath("/etc/app")
@@ -191,11 +196,14 @@ func LoadConfigFile(configPath string) (Provider, error) {
 func LoadCLIConfig() (Provider, error) {
 	// Default CLI config paths
 	paths := []string{
-		"./framework/config",
+		"./configs", // canonical location
 		"./config",
 		".",
-		"../framework/config",    // Added for robustness
-		"../../framework/config", // Added for robustness
+		"../configs",
+		"../../configs",
+		"./framework/config",     // legacy, kept for backwards compatibility
+		"../framework/config",    // legacy
+		"../../framework/config", // legacy
 	}
 
 	for _, path := range paths {
@@ -214,11 +222,14 @@ func LoadCLIConfig() (Provider, error) {
 func LoadServiceConfig() (Provider, error) {
 	// Default service config paths
 	paths := []string{
-		"./framework/config",
+		"./configs", // canonical location
 		"./config",
 		".",
-		"../framework/config",    // Added for robustness
-		"../../framework/config", // Added for robustness
+		"../configs",
+		"../../configs",
+		"./framework/config",     // legacy, kept for backwards compatibility
+		"../framework/config",    // legacy
+		"../../framework/config", // legacy
 	}
 
 	for _, path := range paths {
@@ -237,11 +248,14 @@ func LoadServiceConfig() (Provider, error) {
 func LoadPluginConfig() (Provider, error) {
 	// Default plugin config paths
 	paths := []string{
-		"./framework/config",
+		"./configs", // canonical location
 		"./config",
 		".",
-		"../framework/config",    // Added for robustness
-		"../../framework/config", // Added for robustness
+		"../configs",
+		"../../configs",
+		"./framework/config",     // legacy, kept for backwards compatibility
+		"../framework/config",    // legacy
+		"../../framework/config", // legacy
 	}
 
 	for _, path := range paths {
@@ -296,14 +310,49 @@ func Load(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("unexpected provider type")
 	}
 
-	// Set default values (optional, Viper can also handle defaults)
-	// viperProvider.viper.SetDefault("app.name", "axiomod-viper-default")
-	// viperProvider.viper.SetDefault("app.environment", "development")
-	// viperProvider.viper.SetDefault("http.port", 8080)
+	// Apply code-level defaults so the application remains bootable when no
+	// config file is present (containers, scratch directories). File values
+	// and APP_* environment variables always take precedence over these.
+	setDefaults(viperProvider.viper)
 
 	if err := viperProvider.viper.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
 	return &cfg, nil
+}
+
+// setDefaults registers sane defaults mirroring configs/service_default.yaml.
+// Keep the two in sync: the YAML file documents the defaults, this function
+// guarantees them when no file is found.
+func setDefaults(v *viper.Viper) {
+	v.SetDefault("app.name", "axiomod-service")
+	v.SetDefault("app.environment", "development")
+	v.SetDefault("app.version", "0.0.0")
+	v.SetDefault("app.debug", false)
+
+	v.SetDefault("http.host", "0.0.0.0")
+	v.SetDefault("http.port", 8080)
+	v.SetDefault("http.readTimeout", 10)
+	v.SetDefault("http.writeTimeout", 10)
+
+	v.SetDefault("grpc.host", "0.0.0.0")
+	v.SetDefault("grpc.port", 9090)
+
+	v.SetDefault("observability.logLevel", "info")
+	v.SetDefault("observability.logFormat", "json")
+	v.SetDefault("observability.tracingEnabled", false)
+	v.SetDefault("observability.tracingExporterType", "stdout")
+	v.SetDefault("observability.tracingSamplerRatio", 1.0)
+	v.SetDefault("observability.metricsEnabled", true)
+
+	v.SetDefault("database.driver", "postgres")
+	v.SetDefault("database.host", "localhost")
+	v.SetDefault("database.port", 5432)
+	v.SetDefault("database.sslMode", "disable")
+	v.SetDefault("database.orm", "ent")
+	v.SetDefault("database.maxOpenConns", 25)
+	v.SetDefault("database.maxIdleConns", 5)
+	v.SetDefault("database.connMaxLifetime", 15)
+	v.SetDefault("database.slowQueryThreshold", 200)
 }

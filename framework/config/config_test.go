@@ -46,6 +46,69 @@ auth:
 	})
 }
 
+func TestLoadSearchesConfigsDir(t *testing.T) {
+	// The canonical config location is ./configs/service_default.yaml; Load("")
+	// must find it from the working directory.
+	tempDir := t.TempDir()
+	configsDir := filepath.Join(tempDir, "configs")
+	assert.NoError(t, os.MkdirAll(configsDir, 0o755))
+
+	configContent := `
+app:
+  name: from-configs-dir
+grpc:
+  port: 9090
+database:
+  orm: sql
+`
+	assert.NoError(t, os.WriteFile(filepath.Join(configsDir, "service_default.yaml"), []byte(configContent), 0o644))
+
+	origWd, _ := os.Getwd()
+	assert.NoError(t, os.Chdir(tempDir))
+	defer func() { _ = os.Chdir(origWd) }()
+
+	cfg, err := Load("")
+	assert.NoError(t, err)
+	assert.Equal(t, "from-configs-dir", cfg.App.Name)
+	assert.Equal(t, 9090, cfg.GRPC.Port)
+	assert.Equal(t, "sql", cfg.Database.ORM)
+}
+
+func TestLoadDefaultsWithoutConfigFile(t *testing.T) {
+	// With no config file at all, code-level defaults must keep the app
+	// bootable: real ports, log settings, and the default ORM.
+	tests := []struct {
+		name string
+		got  func(cfg *Config) interface{}
+		want interface{}
+	}{
+		{"app name", func(c *Config) interface{} { return c.App.Name }, "axiomod-service"},
+		{"http port", func(c *Config) interface{} { return c.HTTP.Port }, 8080},
+		{"http host", func(c *Config) interface{} { return c.HTTP.Host }, "0.0.0.0"},
+		{"grpc port", func(c *Config) interface{} { return c.GRPC.Port }, 9090},
+		{"log level", func(c *Config) interface{} { return c.Observability.LogLevel }, "info"},
+		{"log format", func(c *Config) interface{} { return c.Observability.LogFormat }, "json"},
+		{"metrics enabled", func(c *Config) interface{} { return c.Observability.MetricsEnabled }, true},
+		{"database orm", func(c *Config) interface{} { return c.Database.ORM }, "ent"},
+		{"database driver", func(c *Config) interface{} { return c.Database.Driver }, "postgres"},
+		{"max open conns", func(c *Config) interface{} { return c.Database.MaxOpenConns }, 25},
+	}
+
+	tempDir := t.TempDir()
+	origWd, _ := os.Getwd()
+	assert.NoError(t, os.Chdir(tempDir))
+	defer func() { _ = os.Chdir(origWd) }()
+
+	cfg, err := Load("")
+	assert.NoError(t, err)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, tt.got(cfg))
+		})
+	}
+}
+
 func TestViperProvider(t *testing.T) {
 	tempDir := t.TempDir()
 	configContent := `

@@ -185,7 +185,6 @@ type Metrics struct {
 // NewMetrics creates a new metrics registry
 func NewMetrics(cfg *config.Config, logger *Logger) (*Metrics, error) {
 	metricsEnabled := cfg.Observability.MetricsEnabled
-	metricsPort := cfg.Observability.MetricsPort
 
 	if !metricsEnabled {
 		return &Metrics{
@@ -247,7 +246,7 @@ func NewMetrics(cfg *config.Config, logger *Logger) (*Metrics, error) {
 
 	handler := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 
-	logger.Info("Metrics initialized", zap.Int("port", metricsPort))
+	logger.Info("Metrics initialized")
 	return &Metrics{
 		Registry:            registry,
 		Handler:             handler,

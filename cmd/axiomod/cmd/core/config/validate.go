@@ -21,18 +21,22 @@ Example:
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Validating configuration files...")
 
-		// Check if config directory exists
-		configDir := "framework/config"
-		if _, err := os.Stat(configDir); os.IsNotExist(err) {
-			fmt.Println("No config directory found.")
-			return
-		}
-
-		// Get config files
-		files, err := filepath.Glob(filepath.Join(configDir, "*.yaml"))
-		if err != nil {
-			fmt.Printf("Error finding config files: %v\n", err)
-			os.Exit(1)
+		// Collect YAML files from the known config locations, canonical first.
+		configDirs := []string{"configs", "config", "framework/config"}
+		var files []string
+		for _, dir := range configDirs {
+			if _, err := os.Stat(dir); os.IsNotExist(err) {
+				continue
+			}
+			matches, err := filepath.Glob(filepath.Join(dir, "*.yaml"))
+			if err != nil {
+				fmt.Printf("Error finding config files in %s: %v\n", dir, err)
+				os.Exit(1)
+			}
+			files = append(files, matches...)
+			// Include environment overlays (configs/env/*.yaml).
+			envMatches, _ := filepath.Glob(filepath.Join(dir, "env", "*.yaml"))
+			files = append(files, envMatches...)
 		}
 
 		if len(files) == 0 {

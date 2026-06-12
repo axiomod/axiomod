@@ -24,7 +24,7 @@ RUN COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown") && \
 # --- Runtime stage ---
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates tzdata && \
+RUN apk add --no-cache ca-certificates tzdata wget && \
     adduser -D -u 10001 axiomod
 
 WORKDIR /app
@@ -34,7 +34,10 @@ COPY configs/ /app/configs/
 
 USER axiomod
 
-# HTTP, gRPC, metrics
-EXPOSE 8080 9090 9091
+# HTTP (Prometheus metrics at /metrics on this port) and gRPC
+EXPOSE 8080 9090
 
-ENTRYPOINT ["/app/axiomod-server"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+  CMD wget -qO- http://127.0.0.1:8080/live || exit 1
+
+ENTRYPOINT ["/app/axiomod-server", "-config", "/app/configs/service_default.yaml"]

@@ -61,6 +61,13 @@ func NewOIDCService(cfg OIDCConfig, logger *observability.Logger) *OIDCService {
 
 // Start initiates the background refresh of discovery and JWKS
 func (s *OIDCService) Start() {
+	// OIDC is opt-in: with no issuer configured there is nothing to discover
+	// or refresh, so stay idle instead of logging connection errors at boot.
+	if s.config.IssuerURL == "" {
+		s.logger.Info("OIDC issuer not configured, OIDC verification disabled")
+		return
+	}
+
 	// Initial discovery
 	if err := s.Discover(s.ctx); err != nil {
 		s.logger.Error("Initial OIDC discovery failed", zap.Error(err))

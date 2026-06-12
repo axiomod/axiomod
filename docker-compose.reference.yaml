@@ -1,18 +1,19 @@
-version: '3.8'
-
 services:
   app:
     build: .
     ports:
-      - "8080:8080"
-      - "9090:9090"
-      - "9100:9100"
+      - "8080:8080" # HTTP (Prometheus metrics at /metrics)
+      - "9090:9090" # gRPC
     environment:
-      - APP_ENV=local
-      - DB_HOST=postgres
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-password}
-      - KAFKA_BROKERS=kafka:9092
-      - REDIS_HOST=redis
+      # Environment overrides use the APP_ prefix; dots in Viper keys become
+      # underscores (e.g. database.host -> APP_DATABASE_HOST).
+      - APP_APP_ENVIRONMENT=local
+      - APP_DATABASE_HOST=postgres
+      - APP_DATABASE_USER=${POSTGRES_USER:-axiomod}
+      - APP_DATABASE_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - APP_PLUGINS_ENABLED_POSTGRES=true
+      - APP_PLUGINS_ENABLED_REDIS=true
+      - APP_PLUGINS_SETTINGS_REDIS_ADDR=redis:6379
     depends_on:
       - postgres
       - kafka
@@ -64,7 +65,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - "9091:9090" # host 9090 is taken by the app's gRPC port
     volumes:
       - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
 

@@ -1,0 +1,4 @@
+p, role:admin, /api/v1/*, *
+p, role:reader, /api/v1/*, read
+g, alice, role:admin
+g, bob, role:reader

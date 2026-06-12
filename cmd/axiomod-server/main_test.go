@@ -52,16 +52,17 @@ http:
 	assert.Equal(t, "test-env", cfg.App.Environment)
 	assert.Equal(t, 9090, cfg.HTTP.Port)
 
-	// Test loading with empty path (should load defaults from service_default.yaml)
-	// Ensure service_default.yaml exists in a location Viper checks (e.g., ./framework/config)
+	// Test loading with empty path: the loader searches ../../configs from
+	// this package and must find the canonical configs/service_default.yaml.
 	cfgDefault, errDefault := config.Load("")
 	assert.NoError(t, errDefault)
 	assert.NotNil(t, cfgDefault)
 
-	// Check default values loaded from service_default.yaml
-	assert.Equal(t, "axiomod-default", cfgDefault.App.Name, "Default App.Name mismatch")
-	assert.Equal(t, "development", cfgDefault.App.Environment, "Default App.Environment mismatch")
+	// Check values from the canonical default config
+	assert.Equal(t, "axiomod-service", cfgDefault.App.Name, "Default App.Name mismatch")
 	assert.Equal(t, 8080, cfgDefault.HTTP.Port, "Default HTTP.Port mismatch")
+	assert.Equal(t, 9090, cfgDefault.GRPC.Port, "Default GRPC.Port mismatch")
+	assert.Equal(t, "ent", cfgDefault.Database.ORM, "Default Database.ORM mismatch")
 }
 
 func TestJWTAuth(t *testing.T) {

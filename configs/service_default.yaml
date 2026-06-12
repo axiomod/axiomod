@@ -12,8 +12,7 @@ observability:
   tracingUrl: "http://localhost:14268/api/traces"
   tracingInsecure: true # local dev only -- keep false (TLS) in production
   tracingSamplerRatio: 1.0
-  metricsEnabled: true
-  metricsPort: 9091
+  metricsEnabled: true # served at /metrics on the HTTP port
 
 database:
   driver: "postgres" # Options: postgres, mysql
@@ -23,6 +22,7 @@ database:
   password: "password"
   name: "axiomod"
   sslMode: "disable"
+  orm: "ent" # Options: ent (default), sql (plain database/sql repositories)
   maxOpenConns: 25
   maxIdleConns: 5
   connMaxLifetime: 15 # minutes
@@ -40,9 +40,11 @@ grpc:
 
 auth:
   oidc:
-    issuerUrl: "http://localhost:8080/realms/axiomod"
+    # OIDC is opt-in: leave issuerUrl empty to disable discovery/verification.
+    # Example: "https://keycloak.example.com/realms/axiomod"
+    issuerUrl: ""
     clientId: "axiomod-client"
-    clientSecret: "client-secret"
+    clientSecret: "" # set via APP_AUTH_OIDC_CLIENTSECRET
     jwksCacheTtl: 60 # minutes
   jwt:
     # DEV PLACEHOLDER -- must be overridden in every deployment, e.g. via
@@ -57,7 +59,7 @@ casbin:
 
 plugins:
   enabled:
-    postgres: true
+    postgres: false # enable when a PostgreSQL instance is reachable (see database section)
     mysql: false
     redis: false
     kafka: false

@@ -65,3 +65,7 @@ tmp/
 agent-tasks/
 .claude/worktrees/
 .claude/settings.local.json
+
+# Compiled binaries at repo root (use bin/ via make build)
+/axiomod
+/axiomod-server

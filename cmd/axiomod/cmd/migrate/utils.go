@@ -6,10 +6,13 @@ import (
 	"strings"
 
 	"github.com/axiomod/axiomod/framework/config"
-	_ "github.com/lib/pq" // PostgreSQL driver
+
+	_ "github.com/go-sql-driver/mysql" // MySQL driver
+	_ "github.com/lib/pq"              // PostgreSQL driver
 )
 
-// getDSN loads the configuration and returns the database DSN.
+// getDSN loads the configuration and returns the golang-migrate database URL
+// for the configured driver.
 func getDSN() (string, error) {
 	cfg, err := config.Load("")
 	if err != nil {
@@ -17,36 +20,46 @@ func getDSN() (string, error) {
 	}
 
 	dbCfg := cfg.Database
-	if dbCfg.Driver == "postgres" || dbCfg.Driver == "postgresql" {
+	switch dbCfg.Driver {
+	case "postgres", "postgresql":
 		return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
 			dbCfg.User, dbCfg.Password, dbCfg.Host, dbCfg.Port, dbCfg.Name, dbCfg.SSLMode), nil
+	case "mysql":
+		// golang-migrate's mysql driver expects mysql://<go-sql-driver DSN>.
+		return fmt.Sprintf("mysql://%s:%s@tcp(%s:%d)/%s",
+			dbCfg.User, dbCfg.Password, dbCfg.Host, dbCfg.Port, dbCfg.Name), nil
+	default:
+		return "", fmt.Errorf("unsupported database driver: %s (supported: postgres, mysql)", dbCfg.Driver)
 	}
-
-	return "", fmt.Errorf("unsupported database driver: %s", dbCfg.Driver)
 }
 
-// ensureDatabaseExists checks if the database exists and creates it if not.
+// ensureDatabaseExists checks if the target database exists and creates it if
+// not, dispatching on the DSN scheme.
 func ensureDatabaseExists(dsn string) error {
-	// Parse DSN to get base connection string and DB name
-	// DSN format: postgres://user:password@host:port/dbname?sslmode=...
+	switch {
+	case strings.HasPrefix(dsn, "postgres://"):
+		return ensurePostgresDatabase(dsn)
+	case strings.HasPrefix(dsn, "mysql://"):
+		return ensureMySQLDatabase(dsn)
+	default:
+		return fmt.Errorf("unsupported DSN scheme in %q", redactDSN(dsn))
+	}
+}
 
-	// Remove protocol
+// ensurePostgresDatabase connects to the maintenance database and creates the
+// target database when missing.
+func ensurePostgresDatabase(dsn string) error {
+	// DSN format: postgres://user:password@host:port/dbname?sslmode=...
 	dsnWithoutProto := strings.TrimPrefix(dsn, "postgres://")
 
-	// Split at / to get host:port and dbname?query
 	parts := strings.Split(dsnWithoutProto, "/")
 	if len(parts) < 2 {
 		return fmt.Errorf("invalid DSN format: missing /")
 	}
 
-	// Get base part (user:password@host:port)
-	basePart := parts[0]
+	basePart := parts[0] // user:password@host:port
+	dbName := strings.Split(parts[1], "?")[0]
 
-	// Get db part (dbname?sslmode=...)
-	dbPart := parts[1]
-	dbName := strings.Split(dbPart, "?")[0]
-
-	// Build base DSN to connect to 'postgres' database
 	baseDSN := fmt.Sprintf("postgres://%s/postgres?sslmode=disable", basePart)
 
 	db, err := sql.Open("postgres", baseDSN)
@@ -56,19 +69,54 @@ func ensureDatabaseExists(dsn string) error {
 	defer db.Close()
 
 	var exists bool
-	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = '%s')", dbName)
-	err = db.QueryRow(query).Scan(&exists)
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)", dbName).Scan(&exists)
 	if err != nil {
 		return fmt.Errorf("failed to query database existence: %w", err)
 	}
 
 	if !exists {
-		_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName))
-		if err != nil {
+		if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE %q", dbName)); err != nil {
 			return fmt.Errorf("failed to create database %s: %w", dbName, err)
 		}
 		fmt.Printf("Created database: %s\n", dbName)
 	}
 
 	return nil
+}
+
+// ensureMySQLDatabase connects without a schema selected and creates the
+// target database when missing.
+func ensureMySQLDatabase(dsn string) error {
+	// DSN format: mysql://user:password@tcp(host:port)/dbname
+	native := strings.TrimPrefix(dsn, "mysql://")
+
+	idx := strings.LastIndex(native, "/")
+	if idx < 0 {
+		return fmt.Errorf("invalid DSN format: missing /")
+	}
+
+	basePart := native[:idx] // user:password@tcp(host:port)
+	dbName := strings.Split(native[idx+1:], "?")[0]
+
+	db, err := sql.Open("mysql", basePart+"/")
+	if err != nil {
+		return fmt.Errorf("failed to open base mysql connection: %w", err)
+	}
+	defer db.Close()
+
+	if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s`", dbName)); err != nil {
+		return fmt.Errorf("failed to create database %s: %w", dbName, err)
+	}
+
+	return nil
+}
+
+// redactDSN masks the credentials section of a database URL for safe output.
+func redactDSN(dsn string) string {
+	schemeEnd := strings.Index(dsn, "://")
+	at := strings.LastIndex(dsn, "@")
+	if schemeEnd < 0 || at < 0 || at < schemeEnd {
+		return dsn
+	}
+	return dsn[:schemeEnd+3] + "****" + dsn[at:]
 }

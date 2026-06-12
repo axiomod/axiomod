@@ -11,6 +11,22 @@ import (
 	"github.com/spf13/viper"
 )
 
+// findEnvConfigFile resolves the YAML overlay for an environment, trying the
+// canonical configs/env/<env>.yaml location first, then legacy layouts.
+func findEnvConfigFile(env string) (string, error) {
+	candidates := []string{
+		filepath.Join("configs", "env", env+".yaml"),
+		filepath.Join("config", "env", env+".yaml"),
+		filepath.Join("framework", "config", fmt.Sprintf("config.%s.yaml", env)),
+	}
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("config file for environment %q not found (looked in %v)", env, candidates)
+}
+
 // configDiffCmd represents the config diff command
 var configDiffCmd = &cobra.Command{
 	Use:   "diff [env1] [env2]",
@@ -27,25 +43,16 @@ Example:
 
 		fmt.Printf("Comparing configuration between %s and %s...\n", env1, env2)
 
-		// Check if config directory exists
-		configDir := "framework/config"
-		if _, err := os.Stat(configDir); os.IsNotExist(err) {
-			fmt.Println("No config directory found.")
-			return
+		// Resolve environment-specific config files from the known locations.
+		env1File, err := findEnvConfigFile(env1)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
-
-		// Look for environment-specific config files
-		env1File := filepath.Join(configDir, fmt.Sprintf("config.%s.yaml", env1))
-		env2File := filepath.Join(configDir, fmt.Sprintf("config.%s.yaml", env2))
-
-		if _, err := os.Stat(env1File); os.IsNotExist(err) {
-			fmt.Printf("Config file for environment %s not found: %s\n", env1, env1File)
-			return
-		}
-
-		if _, err := os.Stat(env2File); os.IsNotExist(err) {
-			fmt.Printf("Config file for environment %s not found: %s\n", env2, env2File)
-			return
+		env2File, err := findEnvConfigFile(env2)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
 		// Load config for env1

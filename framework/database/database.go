@@ -10,6 +10,11 @@ import (
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/platform/observability"
 
+	// Register the supported database/sql drivers. Connect selects one via
+	// Database.Driver; without these imports sql.Open fails with
+	// "unknown driver" in any binary that uses this package.
+	_ "github.com/go-sql-driver/mysql" // MySQL driver
+	_ "github.com/lib/pq"              // PostgreSQL driver
 	"go.uber.org/zap"
 )
 
@@ -62,18 +67,42 @@ func (d *DB) WithTransaction(ctx context.Context, fn TransactionFunc) error {
 	return nil
 }
 
-// buildDSN assembles the database connection string. The result contains the
-// plaintext password and must never be logged; use redactedDSN for any
-// diagnostic output.
+// buildDSN assembles the driver-specific connection string. The result
+// contains the plaintext password and must never be logged; use redactedDSN
+// for any diagnostic output.
 func buildDSN(dbCfg config.DatabaseConfig) string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.Name, dbCfg.SSLMode)
+	return dsnWithPassword(dbCfg, dbCfg.Password)
 }
 
 // redactedDSN returns a DSN safe for logging, with the password masked.
 func redactedDSN(dbCfg config.DatabaseConfig) string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=**** dbname=%s sslmode=%s",
-		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Name, dbCfg.SSLMode)
+	return dsnWithPassword(dbCfg, "****")
+}
+
+// dsnWithPassword renders the DSN for the configured driver with the given
+// password value, so the real and redacted forms cannot drift apart.
+func dsnWithPassword(dbCfg config.DatabaseConfig, password string) string {
+	switch dbCfg.Driver {
+	case "mysql":
+		return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true%s",
+			dbCfg.User, password, dbCfg.Host, dbCfg.Port, dbCfg.Name, mysqlTLSParam(dbCfg.SSLMode))
+	default: // postgres / postgresql
+		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+			dbCfg.Host, dbCfg.Port, dbCfg.User, password, dbCfg.Name, dbCfg.SSLMode)
+	}
+}
+
+// mysqlTLSParam maps the cross-driver sslMode setting onto the MySQL driver's
+// tls query parameter.
+func mysqlTLSParam(sslMode string) string {
+	switch sslMode {
+	case "", "disable":
+		return "&tls=false"
+	case "require", "verify-ca", "verify-full":
+		return "&tls=true"
+	default:
+		return ""
+	}
 }
 
 // Connect establishes a connection to the database

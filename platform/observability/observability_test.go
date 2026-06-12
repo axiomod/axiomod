@@ -86,7 +86,6 @@ func TestNewMetrics_Disabled(t *testing.T) {
 func TestNewMetrics_Enabled(t *testing.T) {
 	cfg := testConfig()
 	cfg.Observability.MetricsEnabled = true
-	cfg.Observability.MetricsPort = 9100
 
 	logger, err := NewLogger(cfg)
 	require.NoError(t, err)

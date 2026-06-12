@@ -57,7 +57,6 @@ type ObservabilityConfig struct {
 	TracingInsecure     bool // allow plaintext (non-TLS) OTLP export; defaults to false
 	TracingSamplerRatio float64
 	MetricsEnabled      bool
-	MetricsPort         int
 }
 
 // DatabaseConfig represents the database configuration
@@ -69,6 +68,7 @@ type DatabaseConfig struct {
 	Password           string
 	Name               string
 	SSLMode            string
+	ORM                string // "ent" (default) or "sql" for plain database/sql repositories
 	MaxOpenConns       int
 	MaxIdleConns       int
 	ConnMaxLifetime    int // in minutes
