@@ -45,7 +45,10 @@ axiomod validator architecture  # Check import rules
 
 ## Linting
 
-No `.golangci.yml` -- runs with default golangci-lint settings (errcheck, gosimple, govet, ineffassign, staticcheck, unused).
+`.golangci.yml` (v2 config format, golangci-lint v2.x): default linter set
+(errcheck, govet, ineffassign, staticcheck, unused) plus `misspell` and
+`unconvert`, with the `common-false-positives` and `std-error-handling`
+exclusion presets. CI pins the same version via `golangci-lint-action`.
 
 ## Coverage Target
 

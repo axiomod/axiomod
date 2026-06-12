@@ -68,11 +68,12 @@ Example:
 		// Roll back migrations
 		err = m.Steps(-steps) // Negative steps for rollback
 		if err != nil {
-			if err == migrate.ErrNoChange {
+			switch err {
+			case migrate.ErrNoChange:
 				fmt.Println("No migrations to roll back.")
-			} else if err == migrate.ErrNilVersion {
+			case migrate.ErrNilVersion:
 				fmt.Println("No migrations have been applied yet.")
-			} else {
+			default:
 				fmt.Printf("Error rolling back migrations: %v\n", err)
 				os.Exit(1)
 			}
