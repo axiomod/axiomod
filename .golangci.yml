@@ -1,16 +1,19 @@
+version: "2"
+
 run:
   timeout: 5m
 
 linters:
+  # Adds to the default set (errcheck, govet, ineffassign, staticcheck, unused).
+  # gosimple from the v1 config is part of staticcheck in v2.
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
     - misspell
     - unconvert
+  exclusions:
+    # Restore the v1 default exclusions (e.g. unchecked deferred Close()).
+    presets:
+      - common-false-positives
+      - std-error-handling
 
 issues:
   max-issues-per-linter: 0
