@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"github.com/gofiber/fiber/v2"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

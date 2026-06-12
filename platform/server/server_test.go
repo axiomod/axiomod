@@ -11,7 +11,7 @@ import (
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/middleware"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/stretchr/testify/assert"

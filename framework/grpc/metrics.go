@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )

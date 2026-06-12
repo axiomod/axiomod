@@ -96,7 +96,7 @@ import (
 
     // 2. Internal project imports
     "github.com/axiomod/axiomod/framework/config"
-    "github.com/axiomod/axiomod/platform/observability"
+    "github.com/axiomod/axiomod/framework/observability"
 
     // 3. Third-party imports
     "github.com/gofiber/fiber/v2"

@@ -118,7 +118,7 @@ The framework follows Clean Architecture principles:
     package http
 
     import (
-        "github.com/axiomod/axiomod/platform/observability"
+        "github.com/axiomod/axiomod/framework/observability"
         "github.com/gofiber/fiber/v2"
     )
 

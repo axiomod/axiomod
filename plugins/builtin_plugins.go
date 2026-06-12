@@ -10,7 +10,7 @@ import (
 	"github.com/axiomod/axiomod/framework/database"
 	"github.com/axiomod/axiomod/framework/health"
 
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"go.uber.org/zap"
 )
 

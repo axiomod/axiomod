@@ -61,7 +61,7 @@ docs/
 | `framework/circuitbreaker/`, `framework/resilience/` | `developer-guide.md` |
 | `framework/crypto/` | `auth-security-guide.md` |
 | `framework/grpc/` | `api-reference.md`, `developer-guide.md` |
-| `platform/observability/` | `observability-guide.md` |
+| `framework/observability/` | `observability-guide.md` |
 | `platform/server/` | `api-reference.md`, `deployment-guide.md` |
 | `plugins/` | `plugin-development-guide.md` |
 | `cmd/axiomod/` | `cli-reference.md` |

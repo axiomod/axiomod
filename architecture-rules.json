@@ -1,76 +1,29 @@
 {
   "allowedDependencies": {
-    "entity": [],
-    "repository": [
-      "entity"
-    ],
-    "usecase": [
-      "entity",
-      "repository",
-      "service"
-    ],
-    "service": [
-      "entity",
-      "repository"
-    ],
-    "delivery/http": [
-      "usecase",
-      "entity",
-      "middleware"
-    ],
-    "delivery/grpc": [
-      "usecase",
-      "entity"
-    ],
-    "infrastructure/persistence": [
-      "entity",
-      "repository"
-    ],
-    "infrastructure/cache": [
-      "entity"
-    ],
-    "infrastructure/messaging": [
-      "entity"
-    ],
-    "examples/example/entity": [],
-    "examples/example/repository": [
-      "examples/example/entity"
-    ],
-    "examples/example/usecase": [
-      "examples/example/entity",
-      "examples/example/repository",
-      "examples/example/service"
-    ],
-    "examples/example/service": [
-      "examples/example/entity",
-      "examples/example/repository"
-    ],
-    "examples/example/delivery/http": [
-      "examples/example/usecase",
-      "examples/example/entity",
-      "examples/example/delivery/http/middleware"
-    ],
-    "examples/example/delivery/grpc": [
-      "examples/example/usecase",
-      "examples/example/entity"
-    ],
-    "examples/example/infrastructure/persistence": [
-      "examples/example/entity",
-      "examples/example/repository"
-    ],
-    "examples/example/infrastructure/cache": [
-      "examples/example/entity"
-    ],
-    "examples/example/infrastructure/messaging": [
-      "examples/example/entity"
+    "framework/*": [
+      "framework/*"
     ],
     "platform/*": [
-      "framework/config",
-      "framework/*"
+      "framework/*",
+      "platform/*"
+    ],
+    "plugins": [
+      "framework/*",
+      "platform/*"
     ],
     "plugins/*": [
+      "framework/*",
       "platform/*",
-      "framework/*"
+      "plugins"
+    ],
+    "cmd/*": [
+      "*"
+    ],
+    "tests/*": [
+      "*"
+    ],
+    "scripts": [
+      "*"
     ]
   },
   "exceptions": [
@@ -78,33 +31,40 @@
     "mock_",
     "testdata",
     "platform/ent/schema",
-    "platform/ent/migrate"
+    "platform/ent/migrate",
+    "platform/ent/runtime",
+    ".pb.go"
   ],
   "patternRules": [
     {
-      "pattern": "internal/*/entity",
+      "pattern": "examples/*",
       "allowedToImport": "framework/*",
-      "explanation": "Entities can import framework utility packages"
+      "explanation": "Domain code may use framework packages (errors, observability, validation)"
     },
     {
-      "pattern": "internal/*/repository",
-      "allowedToImport": "platform/ent",
-      "explanation": "Repositories can import the Ent ORM from platform"
+      "pattern": "examples/*",
+      "allowedToImport": "examples/*",
+      "explanation": "Intra-domain imports; cross-domain isolation is enforced by domainRules and `validator domain`"
     },
     {
-      "pattern": "internal/*/delivery/*",
-      "allowedToImport": "platform/server",
-      "explanation": "Delivery layers can import server components from platform"
-    },
-    {
-      "pattern": "internal/*/infrastructure/*",
+      "pattern": "examples/*/infrastructure/*",
       "allowedToImport": "platform/*",
-      "explanation": "Infrastructure can import platform components"
+      "explanation": "Infrastructure adapters may use platform components such as platform/ent"
     },
     {
-      "pattern": "internal/*/usecase",
-      "allowedToImport": "framework/validation",
-      "explanation": "Use cases can import validation utilities from framework"
+      "pattern": "examples/*",
+      "allowedToImport": "platform/server",
+      "explanation": "Domain module wiring registers HTTP/gRPC routes against the platform server"
+    },
+    {
+      "pattern": "examples/*",
+      "allowedToImport": "platform/ent",
+      "explanation": "Domain modules may construct the Ent client when database.orm=ent"
+    },
+    {
+      "pattern": "examples/*/cmd/*",
+      "allowedToImport": "*",
+      "explanation": "Example application entry points assemble the full fx graph, like cmd/*"
     }
   ],
   "domainRules": {

@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/axiomod/axiomod/examples/example/usecase"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"

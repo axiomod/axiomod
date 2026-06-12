@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/axiomod/axiomod/framework/config"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/stretchr/testify/assert"

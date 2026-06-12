@@ -8,7 +8,7 @@ import (
 
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/errors"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"

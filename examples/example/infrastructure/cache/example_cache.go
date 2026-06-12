@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/axiomod/axiomod/examples/example/entity"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	"go.uber.org/zap"
 )

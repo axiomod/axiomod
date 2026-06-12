@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"github.com/gofiber/fiber/v2"
 )
 

@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 )

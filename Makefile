@@ -1,7 +1,7 @@
 BINARY_NAME=axiomod-server
 CLI_NAME=axiomod
 
-.PHONY: all build build-cli clean test deps lint fmt help docker
+.PHONY: all build build-cli clean test deps lint fmt help docker validate-arch
 
 all: build build-cli
 
@@ -39,6 +39,9 @@ lint:
 fmt:
 	go fmt ./...
 
+validate-arch: build-cli
+	./bin/$(CLI_NAME) validator architecture
+
 docker:
 	docker build -t axiomod/server:latest .
 
@@ -52,4 +55,5 @@ help:
 	@echo "  make deps         - Install dependencies"
 	@echo "  make lint         - Run linters"
 	@echo "  make fmt          - Format Go code"
+	@echo "  make validate-arch - Run the architecture validator"
 	@echo "  make docker       - Build Docker image for the server"

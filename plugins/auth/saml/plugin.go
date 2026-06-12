@@ -17,7 +17,7 @@ import (
 
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	crewsaml "github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"

@@ -9,7 +9,7 @@ import (
 
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	goredis "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"

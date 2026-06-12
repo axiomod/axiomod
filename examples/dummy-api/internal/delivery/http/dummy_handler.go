@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"github.com/gofiber/fiber/v2"
 )
 

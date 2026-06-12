@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/axiomod/axiomod/framework/auth"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/fx"

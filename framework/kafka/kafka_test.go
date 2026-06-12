@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/axiomod/axiomod/framework/config"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"github.com/stretchr/testify/assert"
 )
 

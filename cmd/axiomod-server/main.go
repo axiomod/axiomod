@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/axiomod/axiomod/framework/config"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	"go.uber.org/fx"
 )

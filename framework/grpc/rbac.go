@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/axiomod/axiomod/framework/auth"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	// Register the supported database/sql drivers. Connect selects one via
 	// Database.Driver; without these imports sql.Open fails with

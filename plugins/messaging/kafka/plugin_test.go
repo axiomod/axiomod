@@ -8,7 +8,7 @@ import (
 
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -6,7 +6,7 @@ description: "Performance analysis and profiling specialist. Invoke when diagnos
 
 You diagnose and optimize performance in Axiomod services. You focus on data-driven analysis.
 
-## Available Metrics (platform/observability)
+## Available Metrics (framework/observability)
 
 - `http_requests_total{method, path, status}` -- Request count
 - `http_request_duration_seconds{method, path, status}` -- Latency histogram

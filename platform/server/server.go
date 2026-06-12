@@ -11,7 +11,7 @@ import (
 	grpc_pkg "github.com/axiomod/axiomod/framework/grpc"
 	"github.com/axiomod/axiomod/framework/health"
 	"github.com/axiomod/axiomod/framework/middleware"
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 	"github.com/gofiber/adaptor/v2"
 
 	"github.com/gofiber/fiber/v2"

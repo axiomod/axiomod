@@ -7,8 +7,8 @@ import (
 
 	"github.com/axiomod/axiomod/framework/config"
 	"github.com/axiomod/axiomod/framework/health"
+	"github.com/axiomod/axiomod/framework/observability"
 	"github.com/axiomod/axiomod/framework/worker"
-	"github.com/axiomod/axiomod/platform/observability"
 	"github.com/axiomod/axiomod/platform/server"
 	"github.com/axiomod/axiomod/plugins"
 

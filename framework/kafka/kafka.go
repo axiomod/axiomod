@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/axiomod/axiomod/platform/observability"
+	"github.com/axiomod/axiomod/framework/observability"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"

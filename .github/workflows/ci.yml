@@ -63,3 +63,21 @@ jobs:
 
     - name: Build
       run: go build -v ./cmd/axiomod-server
+
+    - name: Build CLI
+      run: go build -o bin/axiomod ./cmd/axiomod
+
+    - name: Architecture validation
+      run: ./bin/axiomod validator architecture
+
+    - name: Scaffold smoke test
+      run: |
+        set -eu
+        CLI="$GITHUB_WORKSPACE/bin/axiomod"
+        TMP="$(mktemp -d)"
+        cd "$TMP"
+        "$CLI" init smoke-service --dev --framework-path "$GITHUB_WORKSPACE"
+        cd smoke-service
+        go mod tidy
+        go build ./...
+        go vet ./...
