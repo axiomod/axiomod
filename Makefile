@@ -31,7 +31,7 @@ test:
 deps:
 	go mod tidy
 	go mod download
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
 
 lint:
 	golangci-lint run ./...

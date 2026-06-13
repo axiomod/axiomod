@@ -6,7 +6,7 @@ This guide provides information for developers who are building applications usi
 
 ### Prerequisites
 
-- **Go**: Version 1.24.2 or higher.
+- **Go**: Version 1.25 or higher.
 - **Docker**: For running external dependencies like MySQL, PostgreSQL, or Kafka.
 - **golangci-lint**: For code linting.
 - **Cobra CLI**: The framework uses Cobra for its CLI tool.

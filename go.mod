@@ -36,7 +36,7 @@ require (
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
-	modernc.org/sqlite v1.52.0
+	modernc.org/sqlite v1.34.5
 )
 
 require (
@@ -99,7 +99,6 @@ require (
 	github.com/oasdiff/yaml v0.1.0 // indirect
 	github.com/oasdiff/yaml3 v0.0.13 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
@@ -114,7 +113,6 @@ require (
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/tinylib/msgp v1.2.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.61.0 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
@@ -129,7 +127,7 @@ require (
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect

@@ -112,7 +112,7 @@ axiomod dockerize                       # image tag <module-name>:latest
 axiomod dockerize --tag=myapp:v1.0.0
 ```
 
-Generates a multi-stage Dockerfile (Go 1.24 builder, non-root Alpine runtime,
+Generates a multi-stage Dockerfile (Go 1.25 builder, non-root Alpine runtime,
 healthcheck, `configs/` baked in) and runs `docker build`.
 
 ### `deploy`

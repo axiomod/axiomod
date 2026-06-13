@@ -39,7 +39,7 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v9
       with:
-        version: v2.5.0
+        version: v2.6.2
 
     - name: Test
       run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...

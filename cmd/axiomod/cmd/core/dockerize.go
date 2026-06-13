@@ -46,7 +46,7 @@ Example:
 		dockerfileContent := fmt.Sprintf(`# syntax=docker/dockerfile:1
 
 # --- Build stage ---
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /src
 

@@ -126,7 +126,7 @@ examples/<name>/
 
 ## Key Conventions
 
-- Go 1.24.2, module: `github.com/axiomod/axiomod`, version: v0.2.0
+- Go 1.25.0, module: `github.com/axiomod/axiomod`, version: v0.2.0
 - Constructors: `NewXxx(deps...) *Xxx` or `NewXxx(deps...) (*Xxx, error)`
 - Validation: `validator/v10` struct tags + `framework/validation.Validator`
 - Middleware: struct with `Handle() fiber.Handler` method

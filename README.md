@@ -66,7 +66,7 @@ Axiomod is optimized for:
 
 ### Prerequisites
 
-- Go 1.24+
+- Go 1.25+
 - Docker (optional, for dependencies)
 
 ### Installation

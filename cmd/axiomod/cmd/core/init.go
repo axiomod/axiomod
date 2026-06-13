@@ -204,15 +204,32 @@ func isSemver(s string) bool {
 	return s[1] >= '0' && s[1] <= '9'
 }
 
+// minGoDirective is the minimum "go" directive for generated projects; the
+// framework module itself requires this language version.
+const minGoDirective = "1.25"
+
 // goDirectiveVersion derives the go.mod "go" directive from the running
-// toolchain (e.g. "go1.24.7" -> "1.24").
+// toolchain (e.g. "go1.25.11" -> "1.25"), floored at the framework's own
+// language requirement.
 func goDirectiveVersion() string {
 	v := strings.TrimPrefix(runtime.Version(), "go")
 	parts := strings.Split(v, ".")
-	if len(parts) >= 2 {
-		return parts[0] + "." + parts[1]
+	if len(parts) < 2 {
+		return minGoDirective
 	}
-	return "1.24"
+	derived := parts[0] + "." + parts[1]
+
+	var dMaj, dMin, mMaj, mMin int
+	if _, err := fmt.Sscanf(derived, "%d.%d", &dMaj, &dMin); err != nil {
+		return minGoDirective
+	}
+	if _, err := fmt.Sscanf(minGoDirective, "%d.%d", &mMaj, &mMin); err != nil {
+		return derived
+	}
+	if dMaj < mMaj || (dMaj == mMaj && dMin < mMin) {
+		return minGoDirective
+	}
+	return derived
 }
 
 // buildDependencyVersion looks up the version of a dependency baked into this
@@ -397,7 +414,7 @@ plugins:
 	dockerfileContent := fmt.Sprintf(`# syntax=docker/dockerfile:1
 
 # --- Build stage ---
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /src
 
@@ -451,7 +468,7 @@ A Go service built with the [Axiomod](https://github.com/axiomod/axiomod) framew
 
 ### Prerequisites
 
-- Go 1.24+
+- Go 1.25+
 - Docker (optional, for containerization and dependencies like Postgres/Jaeger)
 
 ### Building
@@ -546,7 +563,7 @@ test:
 deps:
 	go mod tidy
 	go mod download
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
 
 lint:
 	golangci-lint run ./...
