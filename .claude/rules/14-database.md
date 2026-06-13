@@ -15,7 +15,7 @@ Handles: connection pool settings, ping, health check registration.
 Use `WithTransaction` for automatic rollback/commit:
 
 ```go
-err := db.WithTransaction(ctx, func(tx *sql.Tx) error {
+err := db.WithTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
     if _, err := tx.ExecContext(ctx, query1, args...); err != nil {
         return err  // Auto rollback
     }

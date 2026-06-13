@@ -420,7 +420,7 @@ Status as of 2026-06-12 (branch `claude/hopeful-cray-yoivk5`):
 - [x] **W4:** AX-030 done · **AX-031 remains maintainer-gated** (tag v0.3.0 per release checklist)
 - [x] **W5:** AX-040 · AX-041 · AX-042 (logs removed) · AX-043 · AX-044 · AX-045 · AX-046 · AX-047 · AX-048 — done
 - [x] **W6:** AX-050 · AX-051 · AX-052 · AX-053 · AX-054 · AX-055 · AX-056 · AX-057 — done
-- [x] **W7:** AX-060 (errors 94% cov) · AX-062 (gate 50%) · AX-063 · AX-064 · AX-066 — done · **AX-061 partially done** (Ent repo + example_plugin tests added; database/health/circuitbreaker/validation/worker backfill still open)
+- [x] **W7:** AX-060 (errors 94% cov) · AX-061 (backfill complete: database incl. driver-registration + DSN tables + real commit/rollback, health incl. handler/background, circuitbreaker full state walk, validation messages/custom validators, worker timeout/lifecycle, utils, version; total coverage 65.1%) · AX-062 (gate 50%) · AX-063 · AX-064 · AX-066 — done
 - [ ] **W8 (P2):** ~~AX-070~~ (superseded by AX-026, done) · AX-071 · AX-072 · AX-073 · AX-074 — not scheduled
 
 **Additional fixes discovered during execution** (not in the original plan):

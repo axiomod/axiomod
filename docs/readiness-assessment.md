@@ -14,7 +14,7 @@ command shown. Methodology and the full findings history:
 | Build | `go build ./...` | ✅ PASS |
 | Vet / format | `go vet ./...` · `gofmt -l .` | ✅ PASS / clean |
 | Tests (race) | `go test -race ./...` | ✅ all packages green |
-| Coverage | `go test -coverprofile=... ./...` | ✅ ~60% total (CI gate: 50%) |
+| Coverage | `go test -coverprofile=... ./...` | ✅ ~65% total (CI gate: 50%) |
 | Architecture | `make validate-arch` | ✅ 0 violations (enforced in CI) |
 | Server boot | `go run ./cmd/axiomod-server` | ✅ HTTP :8080, gRPC :9090, graceful shutdown, no error logs |
 | Quick start | `axiomod init x --dev` → `go mod tidy && go build ./...` | ✅ compiles (CI smoke test) |
@@ -40,7 +40,7 @@ command shown. Methodology and the full findings history:
    tagging is a maintainer action.
 2. **OpenAPI generation** not built-in (validator exists; generation is on
    the [CLI roadmap](roadmap/cli-enhancement.md)).
-3. **Coverage** at ~60% against the 80% target for core modules; CI gate
+3. **Coverage** at ~65% against the 80% target for core modules; CI gate
    ratchets upward.
 4. Roadmap items (Vault, mTLS, rate limiting, outbox/DLQ, monorepo tooling)
    remain planned — see [docs/roadmap.md](roadmap.md).

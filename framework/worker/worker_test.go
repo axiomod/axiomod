@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/axiomod/axiomod/framework/observability"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWorker(t *testing.T) {
@@ -123,4 +125,86 @@ func TestWorkerErrors(t *testing.T) {
 		assert.NoError(t, err) // Should be no-op/nil
 		_ = w.StopJob("running")
 	})
+}
+
+func newTestWorker(t *testing.T) *Worker {
+	t.Helper()
+	logger, err := observability.NewLogger(&config.Config{})
+	require.NoError(t, err)
+	return New(logger)
+}
+
+func TestWorkerJobTimeout(t *testing.T) {
+	w := newTestWorker(t)
+
+	var sawDeadline atomic.Bool
+	job := &Job{
+		ID:       "slow",
+		Name:     "Slow Job",
+		Interval: time.Hour, // only the immediate run matters
+		Timeout:  30 * time.Millisecond,
+		Func: func(ctx context.Context) error {
+			select {
+			case <-ctx.Done():
+				sawDeadline.Store(true)
+				return ctx.Err()
+			case <-time.After(2 * time.Second):
+				return nil
+			}
+		},
+	}
+
+	require.NoError(t, w.RegisterJob(job))
+	require.NoError(t, w.StartJob(job.ID))
+
+	assert.Eventually(t, func() bool { return sawDeadline.Load() }, 2*time.Second, 10*time.Millisecond,
+		"job context must be cancelled by the per-job timeout")
+	require.NoError(t, w.StopJob(job.ID))
+}
+
+func TestWorkerLifecycleErrors(t *testing.T) {
+	w := newTestWorker(t)
+
+	t.Run("start unknown job", func(t *testing.T) {
+		assert.ErrorIs(t, w.StartJob("missing"), ErrJobNotFound)
+	})
+
+	t.Run("stop unknown job", func(t *testing.T) {
+		assert.ErrorIs(t, w.StopJob("missing"), ErrJobNotFound)
+	})
+
+	t.Run("stop job that is not running", func(t *testing.T) {
+		job := &Job{ID: "idle", Name: "Idle", Interval: time.Hour,
+			Func: func(ctx context.Context) error { return nil }}
+		require.NoError(t, w.RegisterJob(job))
+		// Stopping a registered-but-not-started job must not panic; any
+		// returned error is acceptable as long as the worker stays usable.
+		_ = w.StopJob(job.ID)
+		assert.ErrorIs(t, w.StartJob("still-missing"), ErrJobNotFound)
+	})
+}
+
+func TestWorkerStopAllAndShutdown(t *testing.T) {
+	w := newTestWorker(t)
+
+	var runs atomic.Int32
+	for _, id := range []string{"a", "b"} {
+		job := &Job{
+			ID: id, Name: id, Interval: 20 * time.Millisecond, Timeout: time.Second,
+			Func: func(ctx context.Context) error { runs.Add(1); return nil },
+		}
+		require.NoError(t, w.RegisterJob(job))
+		require.NoError(t, w.StartJob(job.ID))
+	}
+
+	assert.Eventually(t, func() bool { return runs.Load() >= 2 }, 2*time.Second, 10*time.Millisecond)
+
+	w.StopAll()
+	settled := runs.Load()
+	time.Sleep(80 * time.Millisecond)
+	assert.LessOrEqual(t, runs.Load(), settled+2, "jobs must stop ticking after StopAll")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	assert.NoError(t, w.Shutdown(ctx))
 }

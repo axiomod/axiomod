@@ -16,7 +16,7 @@ The following validators are available through the `axiomod validator` command:
 | `static-analysis` | Runs all static analysis tools (vet, gosec, staticcheck) |
 | `static-check` | Runs staticcheck static analyzer |
 | `security` | Runs gosec security scanner |
-| `check-api-spec` | Checks API spec against standards using spectral |
+| `check-api-spec` | Validates OpenAPI 3.x specs (kin-openapi); requires --spec |
 | `check-docs` | Checks if code changes have documentation updates |
 | `standards-check` | Runs all validators |
 | `all` | Alias for standards-check |
@@ -41,27 +41,25 @@ axiomod validator architecture [dir]
 
 The architecture validator uses a JSON configuration file to define allowed dependencies between modules. By default, it looks for `architecture-rules.json` in the current directory, the `./config` directory, or the `./framework/config` directory. You can also specify a custom path using the `--config` flag.
 
-Example `architecture-rules.json`:
+Example `architecture-rules.json` (trimmed from the repository's shipped
+rules — see the file at the repo root for the full, authoritative version):
 
 ```json
 {
   "allowedDependencies": {
-    "entity": [],
-    "repository": ["entity"],
-    "usecase": ["entity", "repository", "service"],
-    "service": ["entity", "repository"],
-    "delivery/http": ["usecase", "entity", "middleware"],
-    "delivery/grpc": ["usecase", "entity"],
-    "infrastructure/persistence": ["entity", "repository"],
-    "infrastructure/cache": ["entity"],
-    "infrastructure/messaging": ["entity"],
-    "platform/*": ["config"],
-    "plugins/*": ["platform/*"]
+    "framework/*": ["framework/*"],
+    "platform/*": ["framework/*", "platform/*"],
+    "plugins": ["framework/*", "platform/*"],
+    "plugins/*": ["framework/*", "platform/*", "plugins"],
+    "cmd/*": ["*"]
   },
-  "exceptions": [
-    "vendor",
-    "mocks",
-    "test"
+  "exceptions": ["_test.go", "mock_", "testdata", ".pb.go"],
+  "patternRules": [
+    {
+      "pattern": "examples/*",
+      "allowedToImport": "framework/*",
+      "explanation": "Domain code may use framework packages"
+    }
   ],
   "domainRules": {
     "allowCrossDomainDependencies": false,
@@ -165,12 +163,15 @@ axiomod validator security [dir]
 
 ## API Spec Validator
 
-Checks API specification files (OpenAPI/Swagger) against standards using spectral.
+Validates OpenAPI 3.x specification files (YAML or JSON) using
+[kin-openapi](https://github.com/getkin/kin-openapi): the document must load,
+resolve its references, and pass structural validation. Invalid specs exit
+non-zero with the error printed.
 
 ### Usage
 
 ```bash
-axiomod validator check-api-spec [dir]
+axiomod validator check-api-spec --spec docs/api/openapi.yaml
 ```
 
 ## Documentation Validator
@@ -209,19 +210,19 @@ axiomod validator all [dir]
 
 ## Integration with CI/CD
 
-You can integrate these validators into your CI/CD pipeline to ensure code quality and standards compliance.
-
-Example GitLab CI configuration:
+The repository's own pipeline (`.github/workflows/ci.yml`) builds the CLI
+and enforces the architecture validator on every push and pull request:
 
 ```yaml
-validate:
-  stage: test
-  script:
-    - go build -o bin/axiomod ./cmd/axiomod
-    - ./bin/axiomod validator all
-  only:
-    - merge_requests
+    - name: Build CLI
+      run: go build -o bin/axiomod ./cmd/axiomod
+
+    - name: Architecture validation
+      run: ./bin/axiomod validator architecture
 ```
+
+Locally, `make validate-arch` runs the same check. Add further validators
+(`naming`, `security`, `standards-check`) as separate steps to taste.
 
 ## Conclusion
 

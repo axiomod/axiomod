@@ -20,7 +20,6 @@ observability:
   tracingEnabled: false
   tracingURL: "http://localhost:14268/api/traces"
   metricsEnabled: true
-  metricsPort: 9090
 
 # database:
 #   driver: "postgres"
